@@ -5,7 +5,18 @@ use App\Http\Controllers\GuestController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TemporaryPassController; // <--- MUST INCLUDE THIS LINE
 
+
+// Application (TemporaryPass) Routes 
+// Creates index, show, store, update, destroy routes for /applications
+// This middleware ensures only logged-in users (Admin or Student/Guest) can access these routes.
+Route::middleware('auth:web,university')->group(function () {
+    Route::resource('applications', TemporaryPassController::class);
+});
+
+
+// UserController login routes
 Route::get('/', function () {
     return view('test.home');
 })->name('test.home');
