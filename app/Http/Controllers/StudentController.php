@@ -11,6 +11,7 @@ class StudentController extends Controller
     public function showLogin() {
         if (Auth::guard('university')->check()) {
             // Student already logged in, redirect
+            // @TODO: Change Redirect Location
             return redirect()->route('test.home')->with('info', 'You are already logged in as Student.');
         }
 
@@ -29,6 +30,7 @@ class StudentController extends Controller
 
         if (Auth::guard('university')->attempt($credentials)) {
             // Login successful
+            // @TODO: Change Redirect Location
             return redirect()->route('test.home')
                 ->with('success', 'Student logged in successfully!');
         }
@@ -41,6 +43,7 @@ class StudentController extends Controller
     public function logout()
     {
         Auth::guard('university')->logout();
+        // @TODO: Change Redirect Location
         return redirect()->route('test.login')->with('success', 'Logged out successfully!');
     }
 }

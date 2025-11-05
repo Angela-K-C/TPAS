@@ -12,6 +12,7 @@ class AdminController extends Controller
     public function showLogin() {
         if (Auth::guard('web')->check()) {
             // Admin already logged in, redirect
+            // @TODO: Change Redirect Location
             return redirect()->route('test.home')->with('info', 'You are already logged in as Admin.');
         }
         
@@ -22,6 +23,7 @@ class AdminController extends Controller
     public function login(Request $request) {
         $credentials = $request->only('email', 'password');
 
+        // @TODO: Change Redirect Location
         if (Auth::attempt($credentials)) {
             return redirect()->route('test.home')->with('success', 'Logged in successfully!');
         }
@@ -33,6 +35,8 @@ class AdminController extends Controller
     public function logout()
     {
         Auth::guard('web')->logout();
+
+        // @TODO: Change Redirect Location
         return redirect()->route('test.login')->with('success', 'Logged out successfully!');
     }
 }

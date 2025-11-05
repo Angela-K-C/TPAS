@@ -9,6 +9,7 @@ use App\Models\Guest;
 class GuestController extends Controller
 {
     // Show login form [For guest - redirect to homepage]
+    // @TODO: Change Redirect Location
     public function showLogin() {
         return view('test.home');
     }
