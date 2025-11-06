@@ -20,42 +20,59 @@ class TemporaryPassController extends Controller
     {
         // Check Admin Guard (web)
         if (Auth::guard('web')->check()) {
-            return TemporaryPass::with('passable')->latest()->get();
-        }
+            $passes = TemporaryPass::with('passable')->latest()->get();
 
-        // Check Student/Guest Guard (university)
-        if (Auth::guard('university')->check()) {
+        } else if (Auth::guard('university')->check()) {
             $user = Auth::guard('university')->user();
-            return TemporaryPass::where('passable_type', $user->getMorphClass()) 
+
+            $passes = TemporaryPass::where('passable_type', $user->getMorphClass()) 
                                 ->where('passable_id', $user->id)
                                 ->latest()
                                 ->get();
+
+        } else if(Auth::guard('guest')->check()) {
+            $guest = Auth::guard('guest')->user();
+
+            $passes = TemporaryPass::where('passable_type', $guest->getMorphClass()) 
+                                ->where('passable_id', $guest->id)
+                                ->latest()
+                                ->get();
+        } else {
+            abort(403, 'Unauthorized');
         }
 
-        return response()->json(['error' => 'Unauthorized'], 403);
+        return view('test.passes.index', compact('passes'));
     }
 
     /**
-     * Store a newly created resource in storage (CREATE).
+     * Apply for a new temporary pass (Student/Guest)
      */
     public function store(Request $request) 
     {
-        if (!Auth::guard('university')->check()) {
-             return response()->json(['error' => 'Only students or guests can apply.'], 403);
+        if (!Auth::guard('university')->check() && !Auth::guard('guest')->check()) {
+            abort(403, 'Unauthorized');
         }
+
 
         $request->validate([
             'reason' => 'required|string|max:255',
         ]);
-
+        
         $pass = new TemporaryPass();
         $pass->reason = $request->input('reason');
         $pass->status = 'pending'; 
         
-        $pass->passable()->associate(Auth::guard('university')->user());
+        if (Auth::guard('university')->check()) {
+            $pass->passable()->associate(Auth::guard('university')->user());
+        }
+
+        if (Auth::guard('guest')->check()) {
+            $pass->passable()->associate(Auth::guard('guest')->user());
+        }
+
         $pass->save();
 
-        return response()->json($pass, 201);
+        return redirect()->route('passes.index')->with('success', 'Temporary pass application submitted!');
     }
 
     /**
@@ -63,21 +80,39 @@ class TemporaryPassController extends Controller
      */
     public function show(TemporaryPass $temporaryPass)
     {
-        // Admin: allowed to see any
         if (Auth::guard('web')->check()) {
-            return $temporaryPass->load('passable');
-        }
+            $temporaryPass->load('passable');
 
-        // Student/Guest: allowed to see only their own
-        if (Auth::guard('university')->check()) {
+        } else if (Auth::guard('university')->check()) {
             $user = Auth::guard('university')->user();
-            if ($temporaryPass->passable_type === $user->getMorphClass() && $temporaryPass->passable_id === $user->id) {
-                return $temporaryPass->load('passable');
+            
+            // User tries to access temporary pass that doesn't belong to him/her
+            if (
+            $temporaryPass->passable_type !== $user->getMorphClass() ||
+            $temporaryPass->passable_id !== $user->id
+            ) {
+                abort(403, 'Unauthorized');
             }
+
+            $temporaryPass->load('passable');
+
+        } else if (Auth::guard('guest')->check()) {
+            $guest = Auth::guard('guest')->user();
+
+            if ($temporaryPass->passable_type !== $guest->getMorphClass() || $temporaryPass->passable_id !== $guest->id) {
+                abort(403, 'Unauthorized');
+            }
+
+            $temporaryPass->load('passable');
+
+        } else {
+            abort(403, 'Unauthorized');
         }
 
-        return response()->json(['error' => 'Unauthorized'], 403);
+        return view('test.passes.show', ['pass' => $temporaryPass]);
     }
+
+
 
     /**
      * Update the specified resource in storage (UPDATE).
@@ -86,7 +121,7 @@ class TemporaryPassController extends Controller
     {
         // Only Admins can update passes (Approve/Reject)
         if (!Auth::guard('web')->check()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            abort(403, 'Unauthorized');
         }
 
         $request->validate([
@@ -99,11 +134,46 @@ class TemporaryPassController extends Controller
 
         if ($request->input('status') === 'approved') {
             $temporaryPass->approved_by = Auth::guard('web')->id();
+
+            // Set validity period based on reason
+            $now = now();
+            switch($temporaryPass->reason_label) {
+
+                // Lost ID - 1 week
+                case 'lost_id':
+                    $temporaryPass->valid_from = $now;
+                    $temporaryPass->valid_until = $now->copy()->addWeek();
+                    break;
+
+                // Damaged Card - 1 week
+                case 'damaged_card':
+                    $temporaryPass->valid_from = $now;
+                    $temporaryPass->valid_until = $now->copy()->addWeek();
+                    break;
+
+                // Campus event - 1 day
+                case 'campus_event':
+                    $temporaryPass->valid_from = $now;
+                    $temporaryPass->valid_until = $now->copy()->addDay();
+                    break;
+
+                // Misplaced ID - 1 day
+                case 'misplaced_id':
+                    $temporaryPass->valid_from = $now;
+                    $temporaryPass->valid_until = $now->copy()->addDay();
+                    break;
+
+                default:
+                    // fallback in case reason is missing or different
+                    $temporaryPass->valid_from = $now;
+                    $temporaryPass->valid_until = $now->copy()->addDay();
+                    break;
+            }
         }
         
         $temporaryPass->save();
 
-        return response()->json($temporaryPass);
+        return redirect()->route('passes.index')->with('success', 'Successfully updated!');
     }
 
     /**
@@ -113,11 +183,11 @@ class TemporaryPassController extends Controller
     {
         // Only Admins can delete passes
         if (!Auth::guard('web')->check()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            abort(403, 'Unauthorized');
         }
 
         $temporaryPass->delete();
 
-        return response()->noContent(); 
+        return redirect()->route('passes.index')->with('success', 'Successfully deleted!');
     }
 }

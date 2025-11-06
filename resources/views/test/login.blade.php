@@ -8,5 +8,5 @@
 </p>
 
 <p>
-    <a href="{{ route('test.home') }}">Login as Guest</a>
+    <a href="{{ route('guest.login') }}">Login as Guest</a>
 </p>

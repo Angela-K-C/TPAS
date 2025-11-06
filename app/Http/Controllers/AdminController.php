@@ -12,7 +12,6 @@ class AdminController extends Controller
     public function showLogin() {
         if (Auth::guard('web')->check()) {
             // Admin already logged in, redirect
-            // @TODO: Change Redirect Location
             return redirect()->route('test.home')->with('info', 'You are already logged in as Admin.');
         }
         

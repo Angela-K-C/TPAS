@@ -1,3 +1,6 @@
+@include('test.navbar')
+
+
 @if(session('info'))
     <div style="color:blue; font-weight:bold;">
         {{ session('info') }}
@@ -26,10 +29,19 @@
         <button type="submit">Logout</button>
     </form>
 
-@else
-    <p>Welcome, Guest!</p>
+@elseif(Auth::guard('guest')->check())
+    <p>Role: Guest</p>
 
-    <a href="{{ route('test.login') }}">Go to Login</a>
+    <p>Welcome, {{ Auth::guard('guest')->user()->name }}!</p>
+
+    <form action="{{ route('guest.logout') }}" method="POST" style="display:inline;">
+        @csrf
+        <button type="submit">Logout</button>
+    </form>
+
+@else
+
+<a href="{{ route('test.login') }}">Go to Login</a>
 
 @endif
 
