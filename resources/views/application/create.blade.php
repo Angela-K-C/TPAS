@@ -3,36 +3,44 @@
 {{-- Extends the dashboard layout and sets the page title --}}
 <x-dashboard-layout title="Apply for New Temporary Pass">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto space-y-8">
+        <p class="text-slate-500">
+            Provide the details below to apply for a new temporary pass. All student information is pulled automatically from your profile.
+        </p>
+        @if (session('status'))
+            <div class="wire-card border-l-4 border-mint bg-mint/10 p-5">
+                <p class="text-sm text-deep-slate">{{ session('status') }}</p>
+            </div>
+        @endif
         
         {{-- Form action  --}}
-        <form action="{{ route('application.store') }}" method="POST" class="space-y-6">
+        <form action="{{ route('application.store') }}" method="POST" class="space-y-8">
             @csrf
 
             {{-- x-card component--}}
             <x-card header="1. Applicant Details">
-                <div class="grid grid-cols-1 gap-y-6 sm:grid-cols-6 sm:gap-x-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     
                     {{-- Student Name --}}
-                    <div class="sm:col-span-3">
-                        <x-input-field id="name" label="Student Name" type="text" value="[Student Name]" disabled />
-                        <p class="mt-2 text-sm text-brand-muted">This is pulled from your student profile.</p>
+                    <div>
+                        <x-input-field id="name" label="Student Name" type="text" value="Ronald Richards" disabled />
+                        <p class="mt-2 text-sm text-slate-500">This is pulled from your student profile.</p>
                     </div>
 
                     {{-- Student ID / Admission Number --}}
-                    <div class="sm:col-span-3">
-                        <x-input-field id="student_id" label="Admission Number" type="text" value="[Student ID/2798]" disabled />
+                    <div>
+                        <x-input-field id="student_id" label="Admission Number" type="text" value="2798" disabled />
                     </div>
                 </div>
             </x-card>
 
             {{-- --- 2. Pass Details Card --- --}}
             <x-card header="2. Pass Details">
-                <div class="grid grid-cols-1 gap-y-6 sm:grid-cols-6 sm:gap-x-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     
                     {{-- Pass Type - select) --}}
-                    <div class="sm:col-span-3">
-                        <x-input-field id="pass_type" label="Pass Type" type="select" name="pass_type">
+                    <div>
+                        <x-input-field id="pass_type" label="Pass Type" type="select" name="pass_type" helper="Choose the option that best matches your need.">
                             <option value="">Select Pass Type</option>
                             <option value="ID_LOST">ID Lost Replacement</option>
                             <option value="TEMPORARY_VISITOR">Temporary Visitor Access</option>
@@ -41,19 +49,18 @@
                     </div>
 
                     {{-- Date From --}}
-                    <div class="sm:col-span-3">
-                        <x-input-field id="date_from" label="Start Date" type="date" name="date_from" />
+                    <div>
+                        <x-input-field id="date_from" label="Start Date" type="date" name="date_from" helper="Passes can begin as early as tomorrow." />
                     </div>
                     
                     {{-- Date To --}}
-                    <div class="sm:col-span-3">
-                        <x-input-field id="date_to" label="End Date" type="date" name="date_to" />
-                        <p class="mt-2 text-sm text-brand-muted">Maximum 7 days duration.</p>
+                    <div>
+                        <x-input-field id="date_to" label="End Date" type="date" name="date_to" helper="Maximum 7 days duration." />
                     </div>
 
                     {{-- Reason for Application (text area) --}}
-                    <div class="sm:col-span-6">
-                        <x-input-field id="reason" label="Detailed Reason for Application" type="textarea" name="reason" />
+                    <div class="sm:col-span-2">
+                        <x-input-field id="reason" label="Detailed Reason for Application" type="textarea" name="reason" helper="Share context for security (people involved, locations, etc.)." />
                     </div>
                 </div>
             </x-card>

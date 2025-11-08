@@ -1,4 +1,5 @@
 import defaultTheme from 'tailwindcss/defaultTheme.js'
+import forms from '@tailwindcss/forms'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -11,21 +12,22 @@ export default {
     extend: {
 
       colors: {
-        'brand-primary': '#4F46E5',     // Indigo-600: For primary buttons, links, and headers
-                'brand-secondary': '#10B981',   // Emerald-500: For success messages, or accents
-                'brand-danger': '#EF4444',      // Red-500: For the 'Report Lost ID' button/errors
-                'brand-text': '#1F2937',        // Gray-800: For primary text
-                'brand-muted': '#6B7280',       // Gray-500: For subtle/secondary text
-                'brand-bg': '#F9FAFB',
+        'iris': '#5B61F6',
+        'deep-slate': '#343645',
+        'lilac': '#C8CCFF',
+        'mint': '#52E0C4',
+        'amber': '#FFB347',
+        'warm-gray': '#9CA3AF',
+        'canvas': '#F7F8FC',
+        'stroke': '#E5E7EB',
       },
 
       fontFamily: {
-        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        sans: ['Instrument Sans', ...defaultTheme.fontFamily.sans],
       },
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),
+    forms,
   ],
 }
-

@@ -3,20 +3,27 @@
 
 @php
     $normalizedStatus = strtolower($status);
-    
- 
+
     $classes = match ($normalizedStatus) {
-        'approved', 'active' => 'bg-green-100 text-green-800',
-        'pending' => 'bg-yellow-100 text-yellow-800',
-        'rejected', 'inactive' => 'bg-red-100 text-brand-danger', // Using centralized danger color
-        default => 'bg-gray-100 text-gray-800', 
+        'approved', 'active' => 'wire-status-pill-active',
+        'pending' => 'wire-status-pill-pending',
+        'rejected', 'inactive' => 'wire-status-pill-inactive',
+        default => 'wire-status-pill bg-lilac text-deep-slate',
     };
-    
-    // Apply common badge styles
-    $base_classes = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full';
-    $classes = $base_classes . ' ' . $classes;
+
+    $iconPath = match ($normalizedStatus) {
+        'approved', 'active' => 'M5 13l4 4L19 7',
+        'pending' => 'M12 8v4l2.5 2.5',
+        'rejected', 'inactive' => 'M6 6l12 12M6 18L18 6',
+        default => null,
+    };
 @endphp
 
-<span {{ $attributes->merge(['class' => $classes]) }}>
+<span {{ $attributes->merge(['class' => $classes.' inline-flex items-center gap-1']) }}>
+    @if($iconPath)
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="{{ $iconPath }}" />
+        </svg>
+    @endif
     {{ $status }}
 </span>

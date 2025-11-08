@@ -2,75 +2,87 @@
 
 <x-dashboard-layout title="Dashboard">
 
-    {{-- --- Action Buttons --- --}}
-    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mb-8 justify-end">
-        {{-- Apply for a New Pass Button --}}
-        <x-button type="primary" href="{{ route('application.create') }}" class="order-2 sm:order-1">
-            Apply for a Temporary Pass
-        </x-button>
-
-        {{-- Report Lost ID Button --}}
-        <x-button type="danger" href="{{ route('report.lost.id') }}" class="order-1 sm:order-2">
-            Report Lost ID
-        </x-button>
-    </div>
-
-    {{-- Application History Table --}}
-    <x-card header="My Pass Applications">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-muted uppercase tracking-wider">
-                            #
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-muted uppercase tracking-wider">
-                            Application ID
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-muted uppercase tracking-wider">
-                            Admin. no
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-muted uppercase tracking-wider">
-                            Duration
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-muted uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th scope="col" class="relative px-6 py-3">
-                            <span class="sr-only">View</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {{-- Loop through applications here  --}}
-                    @php
-                        // Replace this
-                        $applications = [
-                            (object)['id' => 1, 'app_id' => '348tcvbn563456gf', 'admin_no' => '2798', 'duration' => '02/07/1971 - 02/07/1971', 'status' => 'Active'],
-                            (object)['id' => 2, 'app_id' => 'Ronald Richards', 'admin_no' => '4600', 'duration' => '02/07/1971 - 02/07/1971', 'status' => 'Inactive'],
-                        ];
-                    @endphp
-                    
-                    @foreach ($applications as $app)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $app->id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-brand-text">{{ $app->app_id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-brand-text">{{ $app->admin_no }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-brand-text">{{ $app->duration }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <x-status-badge :status="$app->status" />
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                {{-- Link to the application detail view --}}
-                                <a href="{{ route('application.show', ['application' => $app->app_id]) }}" class="text-brand-primary hover:text-indigo-900">
-                                    View Detail
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    <div class="space-y-8">
+        {{-- Hero strip with navigation tabs --}}
+        <div class="wire-card p-6">
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-center flex-wrap gap-3">
+                    <button type="button"
+                        class="px-4 py-2 rounded-full text-sm font-semibold bg-iris text-white">
+                        Dashboard
+                    </button>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 sm:justify-end w-full sm:w-auto">
+                    <x-button type="primary" class="flex-1 sm:flex-none" href="{{ route('application.create') }}">
+                        Apply for a Temporary Pass
+                    </x-button>
+                    <x-button type="secondary" class="flex-1 sm:flex-none" href="{{ route('report.lost.id') }}">
+                        Report Lost ID
+                    </x-button>
+                </div>
+            </div>
         </div>
-    </x-card>
+
+        {{-- Application History Table --}}
+        <x-card header="My Pass Applications">
+            @php
+                $applications = [
+                    (object)['id' => 1, 'app_id' => 'TPAS-2048', 'admin_no' => '2798', 'duration' => 'Mar 01 - Mar 07, 2025', 'status' => 'Active', 'type' => 'Visitor'],
+                    (object)['id' => 2, 'app_id' => 'TPAS-1988', 'admin_no' => '2798', 'duration' => 'Feb 10 - Feb 12, 2025', 'status' => 'Pending', 'type' => 'Temporary'],
+                    (object)['id' => 3, 'app_id' => 'TPAS-1730', 'admin_no' => '2798', 'duration' => 'Jan 15 - Jan 17, 2025', 'status' => 'Inactive', 'type' => 'Lost ID'],
+                ];
+            @endphp
+
+            @if(count($applications) === 0)
+                <div class="text-center py-12 space-y-4">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lilac/60 text-iris text-2xl font-hand">
+                        ✨
+                    </div>
+                    <div>
+                        <p class="text-lg font-semibold text-deep-slate">No applications yet</p>
+                        <p class="text-sm text-warm-gray">Your future requests will appear here once submitted.</p>
+                    </div>
+                    <x-button type="primary" href="{{ route('application.create') }}">
+                        Start a new application
+                    </x-button>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="wire-table">
+                        <thead class="bg-slate-50 text-xs uppercase text-warm-gray tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4 text-left">#</th>
+                                <th class="px-6 py-4 text-left">Application ID</th>
+                                <th class="px-6 py-4 text-left">Admn. no</th>
+                                <th class="px-6 py-4 text-left">Type</th>
+                                <th class="px-6 py-4 text-left">Duration</th>
+                                <th class="px-6 py-4 text-left">Status</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-stroke text-sm">
+                            @foreach ($applications as $app)
+                                <tr>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $app->id }}</td>
+                                    <td class="px-6 py-4 text-deep-slate">{{ $app->app_id }}</td>
+                                    <td class="px-6 py-4 text-deep-slate">{{ $app->admin_no }}</td>
+                                    <td class="px-6 py-4 text-warm-gray">{{ $app->type }}</td>
+                                    <td class="px-6 py-4 text-warm-gray">{{ $app->duration }}</td>
+                                    <td class="px-6 py-4">
+                                        <x-status-badge :status="$app->status" />
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="{{ route('application.show', ['application' => $app->app_id]) }}" class="text-iris font-semibold">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </x-card>
+    </div>
 
 </x-dashboard-layout>

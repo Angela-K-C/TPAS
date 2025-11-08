@@ -1,19 +1,19 @@
 {{-- resources/views/components/card.blade.php --}}
 @props(['header' => null])
 
-<div {{ $attributes->merge(['class' => 'bg-white shadow overflow-hidden sm:rounded-lg']) }}>
+<div {{ $attributes->merge(['class' => 'wire-card overflow-hidden']) }}>
     
     {{-- Header Section --}}
     @if ($header)
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-brand-text">
+        <div class="px-6 py-4 border-b border-stroke bg-slate-50">
+            <h3 class="text-lg leading-6 font-semibold text-slate-700 font-hand">
                 {{ $header }}
             </h3>
         </div>
     @endif
     
     {{-- Content Slot --}}
-    <div class="p-6">
+    <div class="p-6 space-y-4">
         {{ $slot }}
     </div>
 </div>

@@ -1,29 +1,26 @@
 {{-- resources/views/components/navbar.blade.php --}}
-@props([]) {{-- Define props, even if empty, for component compatibility --}}
+@props(['userLabel' => 'Student'])
 
-<nav class="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200">
+<nav class="bg-white border-b border-stroke sticky top-0 z-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+        <div class="h-20 flex items-center justify-between">
             
-            {{-- Logo and Home Link --}}
-            <div class="flex items-center">
-                <a href="{{ route('dashboard') }}" class="text-2xl font-extrabold text-brand-primary tracking-tight">
-                    TPAS
+            {{-- Logo and page hints --}}
+            <div class="flex items-center space-x-6">
+                <a href="{{ route('dashboard') }}" class="text-3xl font-hand text-slate-900 tracking-tight">
+                    Logo
                 </a>
             </div>
             
-            {{-- User Actions / Profile --}}
-            <div class="flex items-center space-x-4">
-                <span class="text-sm font-medium text-brand-text hidden sm:block">
-                    Hello, Student!
+            {{-- User actions --}}
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-medium text-slate-500 hidden md:block">
+                    Hello, {{ $userLabel }}!
                 </span>
                 
-                {{-- Logout Button/Link --}}
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" 
-                            class="text-sm font-medium text-brand-muted hover:text-brand-danger transition duration-150 ease-in-out py-2 px-3 rounded-md hover:bg-brand-bg"
-                    >
+                    <button type="submit" class="text-sm font-semibold text-slate-500 hover:text-red-500">
                         Logout
                     </button>
                 </form>

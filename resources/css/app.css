@@ -1,11 +1,74 @@
-@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Kalam:wght@400;600&display=swap');
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+@layer base {
+    body {
+        @apply bg-canvas text-deep-slate font-sans antialiased;
+        font-family: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-hand {
+        font-family: 'Kalam', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+}
+
+@layer components {
+    .wire-button {
+        @apply inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-full transition;
+    }
+
+    .wire-button-primary {
+        @apply wire-button text-white shadow-sm bg-iris hover:bg-deep-slate;
+    }
+
+    .wire-button-secondary {
+        @apply wire-button text-iris border border-iris bg-white hover:bg-lilac;
+    }
+
+    .wire-button-danger {
+        @apply wire-button text-white bg-red-500 hover:bg-red-600;
+    }
+
+    .wire-card {
+        @apply bg-white border border-stroke rounded-3xl shadow-[0_10px_30px_rgba(22,30,84,0.05)];
+    }
+
+    .wire-input {
+        @apply w-full rounded-2xl border-2 border-stroke bg-white px-4 py-3 text-base font-medium text-deep-slate placeholder:text-warm-gray focus:border-iris focus:ring-2 focus:ring-iris/30 transition;
+    }
+
+    .wire-table {
+        @apply min-w-full divide-y divide-stroke;
+    }
+
+    .wire-status-pill {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold;
+    }
+
+    .wire-status-pill-active {
+        @apply wire-status-pill bg-mint text-deep-slate;
+    }
+
+    .wire-status-pill-pending {
+        @apply wire-status-pill bg-amber text-deep-slate;
+    }
+
+    .wire-status-pill-inactive {
+        @apply wire-status-pill bg-warm-gray text-white;
+    }
+
+    .wire-placeholder-bar {
+        @apply h-2 rounded-full bg-lilac;
+    }
+
+    .wire-icon-button {
+        @apply w-10 h-10 rounded-2xl border border-stroke bg-white flex items-center justify-center text-warm-gray;
+    }
 }
