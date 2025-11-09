@@ -5,62 +5,48 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGuestRequest;
 use App\Http\Requests\UpdateGuestRequest;
 use App\Models\Guest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GuestController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // Show login form 
+    public function showLogin() {
+        if (Auth::guard('guest')->check()) {
+            // Admin already logged in, redirect
+            return redirect()->route('test.home')->with('info', 'You are already logged in as Guest.');
+        }
+        
+        return view('test.guest');
+    }
+    
+
+    // Login with only email (for guests)
+    public function login(Request $request)
     {
-        //
+        $request->validate([
+            'email' => 'required|email|exists:guests,email',
+        ]);
+
+        // Find guest by email
+        $guest = Guest::where('email', $request->email)->first();
+
+        if ($guest) {
+            // Log them in manually without password
+            Auth::guard('guest')->login($guest);
+
+            return redirect()->route('test.home')->with('success', 'Logged in successfully!');
+        }
+
+        return back()->withErrors(['email' => 'Guest not found.']);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Logout method
+    public function logout()
     {
-        //
+        Auth::guard('guest')->logout();
+
+        return redirect()->route('test.login')->with('success', 'Logged out successfully!');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreGuestRequest $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Guest $guest)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Guest $guest)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateGuestRequest $request, Guest $guest)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Guest $guest)
-    {
-        //
-    }
 }
