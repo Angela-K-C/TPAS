@@ -3,15 +3,9 @@
 <x-dashboard-layout title="Guest Dashboard" user="Guest">
 
     <div class="space-y-8">
-        {{-- Navigation Strip --}}
+        {{-- Hero strip with action buttons --}}
         <div class="wire-card p-6">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex items-center flex-wrap gap-3">
-                    <button type="button"
-                        class="px-4 py-2 rounded-full text-sm font-semibold bg-iris text-white">
-                        Guest Dashboard
-                    </button>
-                </div>
                 <div class="flex flex-col sm:flex-row gap-3 sm:justify-end w-full sm:w-auto">
                     <x-button type="primary" class="flex-1 sm:flex-none" href="{{ route('guest.application.create') }}">
                         Apply for a Visitor's Pass
@@ -20,8 +14,8 @@
             </div>
         </div>
 
-        {{-- Guest Applications Table --}}
-        <x-card header="Guest Applications">
+    {{-- Application History Table --}}
+    <x-card header="My Pass Applications">
             @php
                 $guestApplications = [
                     (object)['id' => 1, 'app_id' => 'VST-5120', 'national_id' => '37894561', 'duration' => 'Mar 03 - Mar 05, 2025', 'status' => 'Active', 'purpose' => 'Family Visit'],
@@ -32,15 +26,15 @@
 
             @if(count($guestApplications) === 0)
                 <div class="text-center py-12 space-y-4">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-mint/60 text-deep-slate text-2xl font-hand">
-                        👋
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lilac/60 text-iris text-2xl font-hand">
+                        ✨
                     </div>
                     <div>
-                        <p class="text-lg font-semibold text-deep-slate">No visitor passes yet</p>
-                        <p class="text-sm text-warm-gray">Start an application to receive a QR pass for campus access.</p>
+                        <p class="text-lg font-semibold text-deep-slate">No applications yet</p>
+                        <p class="text-sm text-warm-gray">Your future requests will appear here once submitted.</p>
                     </div>
                     <x-button type="primary" href="{{ route('guest.application.create') }}">
-                        Apply for a Visitor's Pass
+                        Start a new application
                     </x-button>
                 </div>
             @else

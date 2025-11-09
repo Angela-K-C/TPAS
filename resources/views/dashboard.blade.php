@@ -3,15 +3,10 @@
 <x-dashboard-layout title="Dashboard">
 
     <div class="space-y-8">
-        {{-- Hero strip with navigation tabs --}}
+
+        {{-- Hero strip with action buttons --}}
         <div class="wire-card p-6">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex items-center flex-wrap gap-3">
-                    <button type="button"
-                        class="px-4 py-2 rounded-full text-sm font-semibold bg-iris text-white">
-                        Dashboard
-                    </button>
-                </div>
                 <div class="flex flex-col sm:flex-row gap-3 sm:justify-end w-full sm:w-auto">
                     <x-button type="primary" class="flex-1 sm:flex-none" href="{{ route('application.create') }}">
                         Apply for a Temporary Pass
@@ -83,6 +78,7 @@
                 </div>
             @endif
         </x-card>
+
     </div>
 
 </x-dashboard-layout>

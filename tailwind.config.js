@@ -23,7 +23,7 @@ export default {
       },
 
       fontFamily: {
-        sans: ['Instrument Sans', ...defaultTheme.fontFamily.sans],
+        sans: ['Inter', ...defaultTheme.fontFamily.sans],
       },
     },
   },

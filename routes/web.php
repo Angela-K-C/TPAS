@@ -24,6 +24,7 @@ Route::match(['get', 'post'], '/login/guest', function (Request $request) {
 })->name('guest.login');
 
 Route::view('/dashboard', 'dashboard')->name('dashboard');
+Route::view('/profile', 'profile')->name('profile');
 
 Route::view('/applications/create', 'application.create')->name('application.create');
 Route::post('/applications', fn (Request $request) => redirect()->route('dashboard')->with('status', 'Temporary pass submitted.'))->name('application.store');
