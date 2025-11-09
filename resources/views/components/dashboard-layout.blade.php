@@ -8,7 +8,13 @@
 <div class="min-h-screen flex flex-col bg-gray-50">
     
     {{-- 1. Navigation Bar --}}
+    {{-- <x-navbar :user-label="$user" /> --}}
+
+    @if ($user === 'Admin')
+    <x-admin-navbar :user-label="$user" />
+@else
     <x-navbar :user-label="$user" />
+@endif
 
     {{-- 2. Page Header --}}
     <header class="bg-white shadow-sm border-b border-stroke">

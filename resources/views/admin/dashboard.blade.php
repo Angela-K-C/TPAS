@@ -1,0 +1,97 @@
+{{-- resources/views/admin/dashboard.blade.php --}}
+
+<x-dashboard-layout title="Admin Dashboard" user="Admin">
+
+    {{-- --- Top Action Buttons --- --}}
+    <div class="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 mb-6">
+        <x-button type="primary" href="{{ route('admin.applications.manage') }}" class="flex-1 sm:flex-none">
+            Manage Applications
+        </x-button>
+
+        <x-button type="secondary" href="{{ route('admin.passes.expired') }}" class="flex-1 sm:flex-none">
+            Expired Passes
+        </x-button>
+
+        <x-button type="warning" href="{{ route('admin.reports.lost.id') }}" class="flex-1 sm:flex-none">
+            Lost ID Reports
+        </x-button>
+
+    </div>
+
+    {{-- --- Key Metric Cards (smaller) --- --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        @php
+            $metrics = [
+                // Links to the Manage page with a 'Pending' status filter
+                ['title' => 'Pending Applications', 'count' => '21', 'color' => 'text-iris', 'route' => route('admin.applications.manage', ['status' => 'Pending'])],
+                
+                // Links to the Manage page with an 'Approved' status filter
+                ['title' => 'Approved Passes', 'count' => '21', 'color' => 'text-green-600', 'route' => route('admin.applications.manage', ['status' => 'Approved'])],
+                
+                // Links to the Manage page with a 'Rejected' status filter
+                ['title' => 'Rejected Applications', 'count' => '5', 'color' => 'text-red-600', 'route' => route('admin.applications.manage', ['status' => 'Rejected'])],
+                
+                // Links directly to the Expired Passes page
+                ['title' => 'Expired Passes', 'count' => '78', 'color' => 'text-gray-500', 'route' => route('admin.passes.expired')],
+            ];
+        @endphp
+
+        @foreach ($metrics as $metric)
+            <x-card class="shadow-md hover:shadow-lg transition duration-150 rounded-xl p-4">
+                <div class="flex flex-col space-y-1">
+                    <p class="text-2xl sm:text-3xl font-bold {{ $metric['color'] }}">{{ $metric['count'] }}</p>
+                    <h3 class="text-base font-medium text-slate-700">{{ $metric['title'] }}</h3>
+                    {{-- USE: The dynamic route generated above --}}
+                    <a href="{{ $metric['route'] }}" class="text-sm font-medium text-slate-400 hover:text-iris mt-1 inline-block">View all →</a>
+                </div>
+            </x-card>
+        @endforeach
+    </div>
+
+    {{-- --- Recent Activities Table --- --}}
+<x-card header="Recent Activities (Last 5)">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Application ID</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin. no</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Duration</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4"></th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200 text-sm">
+                @php
+                    $recentApplications = [
+                        (object)['id' => 1, 'app_id' => '346tcvbn563456gf', 'admin_no' => '2798', 'duration' => 'Dec 15 - Dec 22', 'status' => 'Pending'],
+                        (object)['id' => 2, 'app_id' => '998lkjasd765345g', 'admin_no' => '4600', 'duration' => 'Dec 01 - Dec 07', 'status' => 'Inactive'],
+                        (object)['id' => 3, 'app_id' => '112fghj4565432a', 'admin_no' => '1029', 'duration' => 'Nov 20 - Nov 27', 'status' => 'Approved'],
+                        (object)['id' => 4, 'app_id' => '776qwerty54321b', 'admin_no' => '3344', 'duration' => 'Nov 10 - Nov 17', 'status' => 'Rejected'],
+                    ];
+                @endphp
+
+                @foreach ($recentApplications as $app)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $app->id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">{{ $app->app_id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->admin_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->duration }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <x-status-badge :status="$app->status" />
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <a href="{{ route('admin.applications.review', ['application' => $app->id]) }}" class="text-iris font-medium hover:underline">
+                                    Review
+                                </a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</x-card>
+
+
+</x-dashboard-layout>
