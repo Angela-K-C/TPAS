@@ -18,5 +18,5 @@ Route::get('admin-dashboard', function(){
 });
 
 Route::get('manage-users', function(){
-    return view('adminPages.manageUsers');
+    return view('adminPages.userManagement');
 });
