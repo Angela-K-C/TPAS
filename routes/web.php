@@ -6,7 +6,8 @@ use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TemporaryPassController;
-
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 
 // Homepage
 Route::get('/', function () {
