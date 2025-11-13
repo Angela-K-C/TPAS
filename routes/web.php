@@ -116,7 +116,24 @@ Route::get('/admin/dashboard', function () {
 
 
 // Applications
-Route::view('/admin/applications/manage', 'admin.applications.manage')->name('admin.applications.manage');
+Route::get('/admin/applications/manage', function (Request $request) {
+    $status = $request->query('status', 'Pending');
+
+    $query = TemporaryPass::query();
+
+    if ($status !== 'All') {
+        $query->where('status', $status);
+    }
+
+    $applications = $query->latest()->get();
+
+    return view('admin.applications.manage', [
+        'applications' => $applications,
+        'currentFilter' => $status, 
+    ]);
+})->name('admin.applications.manage');
+
+
 Route::view('/admin/applications/show', 'admin.applications.show')->name('admin.applications.show');
 
 Route::get('/admin/applications/review/{application}', function ($id) {
