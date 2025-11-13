@@ -119,15 +119,24 @@ Route::get('/admin/dashboard', function () {
 Route::view('/admin/applications/manage', 'admin.applications.manage')->name('admin.applications.manage');
 Route::view('/admin/applications/show', 'admin.applications.show')->name('admin.applications.show');
 
-Route::get('/admin/applications/review/{application}', fn (string $application) =>
-    view('admin.applications.review')
-)->name('admin.applications.review');
+Route::get('/admin/applications/review/{application}', function ($id) {
+    $application = TemporaryPass::findOrFail($id);
+    return view('admin.application-review', ['application' => $application]);
+})->name('admin.applications.review');
 
-Route::put('/admin/applications/review/{application}', function (string $application) {
-    return redirect()
-        ->route('admin.applications.review', ['application' => $application])
-        ->with('status', 'Application updated.');
-})->name('application.update');
+Route::post('/admin/applications/{application}/approve', function ($id) {
+    $application = TemporaryPass::findOrFail($id);
+    $application->status = 'approved';
+    $application->save();
+    return redirect()->route('admin.dashboard');
+})->name('admin.applications.approve');
+
+Route::post('/admin/applications/{application}/reject', function ($id) {
+    $application = TemporaryPass::findOrFail($id);
+    $application->status = 'rejected';
+    $application->save();
+    return redirect()->route('admin.dashboard');
+})->name('admin.applications.reject');
 
 // Passes and Reports
 Route::view('/admin/passes/expired', 'admin.passes.expired')->name('admin.passes.expired');
