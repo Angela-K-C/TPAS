@@ -175,6 +175,10 @@ Route::view('/admin/reports/lost-id', 'admin.reports.lost-id')->name('admin.repo
 
 Route::post('/logout', fn () => redirect()->route('login.choice'))->name('logout');
 
+Route::get('/passes/{temporaryPass}/qr-code', [TemporaryPassController::class, 'qrCodeImage'])->name('passes.qr.image');
+Route::get('/passes/verify/{token}', [TemporaryPassController::class, 'verifyByToken'])->name('passes.qr.verify');
+Route::resource('passes', TemporaryPassController::class);
+
 /*
 |--------------------------------------------------------------------------
 | Security Guard Portal

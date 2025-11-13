@@ -51,8 +51,16 @@
     @endif
 @endauth
 
-<h2>QR code here (to download temporary pass) 👎</h2>
-<img src="https://hexdocs.pm/qr_code/2.2.1/docs/qrcode.svg" alt="QR Code" width="100" height="100" />
+@if($pass->qr_code_token)
+    <section style="margin-top: 2rem;">
+        <h2>Your QR code</h2>
+        <p>The guard will scan this code or enter token <strong>{{ strtoupper(substr($pass->qr_code_token, 0, 8)) }}</strong>.</p>
+        <img src="{{ route('passes.qr.image', $pass) }}" alt="Temporary pass QR code" width="220" height="220" style="border:1px solid #ddd; padding:8px; background:#fff;">
+        <div style="margin-top: 0.5rem;">
+            <a href="{{ route('passes.qr.image', $pass) }}" download="temporary-pass-{{ $pass->id }}.svg">Download QR</a>
+        </div>
+    </section>
+@endif
 
 <br><br>
 <a href="{{ route('passes.index') }}">Back to all passes</a>

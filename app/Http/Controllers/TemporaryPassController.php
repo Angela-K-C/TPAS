@@ -7,11 +7,18 @@ use App\Models\Student;
 use App\Models\Guest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\StoreTemporaryPassRequest;
-use App\Http\Requests\UpdateTemporaryPassRequest;
+use Illuminate\Support\Facades\Storage;
 
 class TemporaryPassController extends Controller
 {
+    /**
+     * Show the application form.
+     */
+    public function create()
+    {
+        return view('test.passes.create');
+    }
+
     /**
      * Display a listing of the resource (READ).
      * Admins see all passes. Students/Guests only see their own.
@@ -71,6 +78,7 @@ class TemporaryPassController extends Controller
         }
 
         $pass->save();
+        $pass->ensureQrCodeAssets();
 
         return redirect()->route('passes.index')->with('success', 'Temporary pass application submitted!');
     }
@@ -80,36 +88,13 @@ class TemporaryPassController extends Controller
      */
     public function show(TemporaryPass $temporaryPass)
     {
-        if (Auth::guard('web')->check()) {
-            $temporaryPass->load('passable');
+        $this->assertViewerCanAccess($temporaryPass);
+        $temporaryPass->load('passable', 'approver');
+        $temporaryPass->ensureQrCodeAssets();
 
-        } else if (Auth::guard('university')->check()) {
-            $user = Auth::guard('university')->user();
-            
-            // User tries to access temporary pass that doesn't belong to him/her
-            if (
-            $temporaryPass->passable_type !== $user->getMorphClass() ||
-            $temporaryPass->passable_id !== $user->id
-            ) {
-                abort(403, 'Unauthorized');
-            }
-
-            $temporaryPass->load('passable');
-
-        } else if (Auth::guard('guest')->check()) {
-            $guest = Auth::guard('guest')->user();
-
-            if ($temporaryPass->passable_type !== $guest->getMorphClass() || $temporaryPass->passable_id !== $guest->id) {
-                abort(403, 'Unauthorized');
-            }
-
-            $temporaryPass->load('passable');
-
-        } else {
-            abort(403, 'Unauthorized');
-        }
-
-        return view('test.passes.show', ['pass' => $temporaryPass]);
+        return view('test.passes.show', [
+            'pass' => $temporaryPass,
+        ]);
     }
 
 
@@ -189,5 +174,85 @@ class TemporaryPassController extends Controller
         $temporaryPass->delete();
 
         return redirect()->route('passes.index')->with('success', 'Successfully deleted!');
+    }
+
+    /**
+     * Serve the QR code image for the pass (Admins/Owners only).
+     */
+    public function qrCodeImage(TemporaryPass $temporaryPass)
+    {
+        $this->assertViewerCanAccess($temporaryPass);
+        $temporaryPass->ensureQrCodeAssets();
+
+        if (! $temporaryPass->qr_code_path) {
+            abort(404, 'QR code unavailable.');
+        }
+
+        $path = Storage::disk('public')->path($temporaryPass->qr_code_path);
+
+        if (! is_file($path)) {
+            $temporaryPass->generateQrCodeImage();
+        }
+
+        return response()->file(
+            $path,
+            [
+                'Content-Type' => 'image/svg+xml',
+                'Cache-Control' => 'public, max-age=604800',
+            ]
+        );
+    }
+
+    /**
+     * Public verification endpoint embedded inside the QR payload.
+     */
+    public function verifyByToken(string $token)
+    {
+        $pass = TemporaryPass::with('passable')
+            ->where('qr_code_token', $token)
+            ->firstOrFail();
+
+        return response()->json([
+            'found' => true,
+            'status' => $pass->status,
+            'reason' => $pass->reason_label,
+            'pass_reference' => strtoupper(substr($pass->qr_code_token, 0, 8)),
+            'holder_name' => $pass->passable?->name,
+            'holder_email' => $pass->passable?->email,
+            'pass_type' => class_basename($pass->passable_type),
+            'valid_from' => optional($pass->valid_from)?->toIso8601String(),
+            'valid_until' => optional($pass->valid_until)?->toIso8601String(),
+            'qr_token' => $pass->qr_code_token,
+        ]);
+    }
+
+    /**
+     * Gate access so only admins or pass owners can interact with the resource.
+     */
+    private function assertViewerCanAccess(TemporaryPass $temporaryPass): void
+    {
+        if (Auth::guard('web')->check()) {
+            return;
+        }
+
+        if (Auth::guard('university')->check()) {
+            $user = Auth::guard('university')->user();
+
+            if ($temporaryPass->passable_type === $user->getMorphClass()
+                && $temporaryPass->passable_id === $user->id) {
+                return;
+            }
+        }
+
+        if (Auth::guard('guest')->check()) {
+            $guest = Auth::guard('guest')->user();
+
+            if ($temporaryPass->passable_type === $guest->getMorphClass()
+                && $temporaryPass->passable_id === $guest->id) {
+                return;
+            }
+        }
+
+        abort(403, 'Unauthorized');
     }
 }
