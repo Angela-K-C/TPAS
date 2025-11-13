@@ -11,8 +11,8 @@
         <form class="space-y-6" action="{{ route('student.login') }}" method="POST">
             @csrf
             
-            {{-- Admission Number --}}
-            <x-input-field id="admission_number" label="Admission Number" type="text" name="admission_number" />
+            {{-- Email--}}
+            <x-input-field id="email" label="Email" type="text" name="email" />
 
             {{-- Password --}}
             <x-input-field id="password" label="Password" type="password" name="password" />

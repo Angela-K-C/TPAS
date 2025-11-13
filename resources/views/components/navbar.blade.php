@@ -1,5 +1,7 @@
 {{-- resources/views/components/navbar.blade.php --}}
-@props(['userLabel' => 'Student'])
+@props(['userLabel' => 'Student',
+'logoutRoute' => route('student.logout') 
+])
 
 <nav class="bg-white border-b border-stroke sticky top-0 z-20 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,7 +31,7 @@
                 <span class="text-sm font-medium text-slate-500">
                     Hello, {{ $userLabel }}!
                 </span>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ $logoutRoute }}">
                     @csrf
                     <button type="submit" class="text-sm font-semibold text-iris hover:text-red-500">
                         Logout

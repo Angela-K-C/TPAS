@@ -1,7 +1,8 @@
 {{-- resources/views/application/create.blade.php --}}
 
 {{-- Extends the dashboard layout and sets the page title --}}
-<x-dashboard-layout title="Apply for New Temporary Pass">
+<x-dashboard-layout title="Apply for New Temporary Pass" :user="auth()->user()->name">
+
 
     <div class="max-w-5xl mx-auto space-y-8">
         <p class="text-slate-500">
@@ -23,13 +24,13 @@
                     
                     {{-- Student Name --}}
                     <div>
-                        <x-input-field id="name" label="Student Name" type="text" value="Ronald Richards" disabled />
+                        <x-input-field id="name" label="Student Name" type="text" value="{{ auth()->user()->name }}" disabled />
                         <p class="mt-2 text-sm text-slate-500">This is pulled from your student profile.</p>
                     </div>
 
                     {{-- Student ID / Admission Number --}}
                     <div>
-                        <x-input-field id="student_id" label="Admission Number" type="text" value="2798" disabled />
+                        <x-input-field id="student_id" label="Admission Number" type="text" value="{{ auth()->user()->id }}" disabled />
                     </div>
                 </div>
             </x-card>

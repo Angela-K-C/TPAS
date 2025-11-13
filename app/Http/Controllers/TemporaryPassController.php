@@ -152,8 +152,6 @@ class TemporaryPassController extends Controller
             // Send email notifying user
             Mail::to($recipient)
                 ->send(new WelcomeMail($username, $status, null));
-
-            // Redirect to appropriate route
             return redirect()->route('passes.index')->with('success', 'Pass rejected, email sent!');
         }
 
@@ -206,9 +204,10 @@ class TemporaryPassController extends Controller
         }
 
         $temporaryPass->save();
-    
+        
+
         // Redirect to appropriate route
-        return redirect()->route('passes.index')->with('success', 'Successfully updated, email sent to user!');
+        return redirect()->route('passes.index')->with('success', 'Successfully updated, email sent to user, email sent to user!');
     }
 
     /**
