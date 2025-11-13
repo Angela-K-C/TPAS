@@ -108,64 +108,25 @@ Route::get('/guest/applications/{application}', function (TemporaryPass $applica
 */
 
 // Authentication
-Route::view('/admin/login', 'admin.login')->name('admin.login');
+Route::middleware('guest:web')->group(function () {
+    Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
+});
 
-// Dashboard
-Route::get('/admin/dashboard', function () {
-    $passes = TemporaryPass::latest()->take(5)->get();
-    return view('admin.dashboard', ['passes' => $passes]);
-})->name('admin.dashboard');
+Route::post('/admin/logout', [AdminController::class, 'logout'])
+    ->middleware('auth:web')
+    ->name('admin.logout');
 
-
-// Applications
-Route::get('/admin/applications/manage', function (Request $request) {
-    $status = $request->query('status', 'Pending');
-
-    $query = TemporaryPass::query();
-
-    if ($status !== 'All') {
-        $query->where('status', $status);
-    }
-
-    $applications = $query->latest()->get();
-
-    return view('admin.applications.manage', [
-        'applications' => $applications,
-        'currentFilter' => $status, 
-    ]);
-})->name('admin.applications.manage');
-
-
-Route::view('/admin/applications/show', 'admin.applications.show')->name('admin.applications.show');
-
-Route::get('/admin/applications/review/{application}', function ($id) {
-    $application = TemporaryPass::findOrFail($id);
-    return view('admin.application-review', ['application' => $application]);
-})->name('admin.applications.review');
-
-Route::post('/admin/applications/{application}/approve', function ($id) {
-    $application = TemporaryPass::findOrFail($id);
-    $application->status = 'approved';
-    $application->save();
-    return redirect()->route('admin.dashboard');
-})->name('admin.applications.approve');
-
-Route::post('/admin/applications/{application}/reject', function ($id) {
-    $application = TemporaryPass::findOrFail($id);
-    $application->status = 'rejected';
-    $application->save();
-    return redirect()->route('admin.dashboard');
-})->name('admin.applications.reject');
-
-// Passes and Reports
-
-Route::get('/admin/passes/expired', function () {
-    $expiredPasses = TemporaryPass::where('valid_until', '<', Carbon::now())->get();
-
-    return view('admin.passes.expired', ['expiredPasses' => $expiredPasses]);
-})->name('admin.passes.expired');
-
-Route::view('/admin/reports/lost-id', 'admin.reports.lost-id')->name('admin.reports.lost.id');
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware('auth:web')
+    ->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/applications/manage', [AdminController::class, 'applicationsManage'])->name('applications.manage');
+        Route::get('/applications/review/{application}', [AdminController::class, 'applicationsReview'])->name('applications.review');
+        Route::get('/passes/expired', [AdminController::class, 'passesExpired'])->name('passes.expired');
+        Route::view('/reports/lost-id', 'admin.reports.lost-id')->name('reports.lost.id');
+    });
 
 /*
 |--------------------------------------------------------------------------

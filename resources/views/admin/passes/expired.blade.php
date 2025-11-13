@@ -37,10 +37,10 @@
                                 {{ class_basename($pass->passable_type) }} ({{ $pass->passable_id }})
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">
-                                {{ $pass->valid_until->format('M d, Y') }}
+                                {{ $pass->valid_until?->format('M d, Y') ?? '—' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap font-bold text-red-600">
-                                {{ \Carbon\Carbon::parse($pass->valid_until)->diffInDays(now()) }}
+                                {{ $pass->valid_until ? \Carbon\Carbon::parse($pass->valid_until)->diffInDays(now()) : '—' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <x-status-badge :status="$pass->status" />
