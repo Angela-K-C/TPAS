@@ -47,6 +47,12 @@ return [
             'provider' => 'students',
         ],
         // ---------------------------------------------
+
+        // Guard for guests
+        'guest' => [
+            'driver' => 'session',
+            'provider' => 'guests',
+        ],
     ],
 
     /*
@@ -80,10 +86,10 @@ return [
         ],
         // -------------------------------------------------
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'guests' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Guest::class,
+        ],
     ],
 
     /*

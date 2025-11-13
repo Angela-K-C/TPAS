@@ -26,6 +26,8 @@ class Student extends Authenticatable
      */
     protected $table = 'students';
 
+    public $timestamps = false;
+
     /**
      * The attributes that are mass assignable.
      *
