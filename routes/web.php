@@ -109,7 +109,11 @@ Route::get('/guest/applications/{application}', function (TemporaryPass $applica
 Route::view('/admin/login', 'admin.login')->name('admin.login');
 
 // Dashboard
-Route::view('/admin/dashboard', 'admin.dashboard')->name('admin.dashboard');
+Route::get('/admin/dashboard', function () {
+    $passes = TemporaryPass::latest()->take(5)->get();
+    return view('admin.dashboard', ['passes' => $passes]);
+})->name('admin.dashboard');
+
 
 // Applications
 Route::view('/admin/applications/manage', 'admin.applications.manage')->name('admin.applications.manage');
