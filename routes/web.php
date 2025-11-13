@@ -54,9 +54,9 @@ Route::post('/applications', fn (Request $request) => redirect()
     ->with('status', 'Temporary pass submitted.')
 )->name('application.store');
 
-Route::get('/applications/{application}', fn (string $application) =>
-    view('application.show')
-)->name('application.show');
+Route::get('/applications/{application}', function (TemporaryPass $application) {
+    return view('application.show', ['application' => $application]);
+})->name('application.show');
 
 Route::view('/report/lost-id', 'report.lost-id')->name('report.lost.id');
 Route::post('/report/lost-id', fn (Request $request) => redirect()

@@ -2,29 +2,16 @@
 
 <x-dashboard-layout title="Application Detail">
 
-    {{-- Dummy data for structure review (replace with actual PHP variables) --}}
-    @php
-        $applicationId = '346tcvbn563456gf';
-        $status = 'Active'; 
-        $studentName = 'Ronald Richards';
-        $studentId = '4600';
-        $passType = 'Temporary Visitor Access';
-        $startDate = '2025-12-01';
-        $endDate = '2025-12-07';
-        $reason = 'Temporary permit for family visit during holidays.';
-    @endphp
-
     <div class="max-w-6xl mx-auto space-y-6">
 
         {{-- Top Header Row --}}
         <div class="flex items-center justify-between pb-4 border-b border-stroke">
             <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:text-white flex items-center space-x-2">
-                <span class="wire-icon-button w-8 h-8"> <- </span>
+                <span class="wire-icon-button w-8 h-8"> ← </span>
                 <span>Back to Dashboard</span>
             </a>
-            
-            {{-- Download Button --}}
-            @if(strtolower($status) === 'active')
+
+            @if(strtolower($application->status) === 'active')
                 <x-button type="primary" href="#">
                     Download Temporary Pass
                 </x-button>
@@ -32,53 +19,57 @@
         </div>
 
         <h2 class="text-4xl font-hand text-slate-900 dark:text-white flex items-center gap-4">
-            Application #{{ $applicationId }}
-            <x-status-badge :status="$status" class="ml-4 text-base" />
+            Application #TPAS-{{ $application->id }}
+            <x-status-badge :status="$application->status" class="ml-4 text-base" />
         </h2>
 
-        {{-- Main Detail Grid (showing details and QR code) --}}
+        {{-- Main Detail Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {{-- 1. Application Details --}}
             <div class="lg:col-span-2 space-y-6">
                 <x-card header="Application Details">
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 text-base">
                         <div>
-                            <dt class="text-slate-500 dark:text-slate-300">Student Name</dt>
-                            <dd class="mt-1 font-semibold text-slate-900 dark:text-white">{{ $studentName }}</dd>
+                            <dt class="text-slate-500 dark:text-slate-300">Pass Owner</dt>
+                            <dd class="mt-1 font-semibold text-slate-900 dark:text-white">
+                                {{ class_basename($application->passable_type) }} #{{ $application->passable_id }}
+                            </dd>
                         </div>
                         <div>
-                            <dt class="text-slate-500 dark:text-slate-300">Student ID</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $studentId }}</dd>
+                            <dt class="text-slate-500 dark:text-slate-300">Application ID</dt>
+                            <dd class="mt-1 text-slate-900 dark:text-white">TPAS-{{ $application->id }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Pass Type</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $passType }}</dd>
+                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $application->type ?? 'Temporary Pass' }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Duration</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $startDate }} to {{ $endDate }}</dd>
+                            <dd class="mt-1 text-slate-900 dark:text-white">
+                                {{ $application->valid_from->format('Y-m-d') }} to {{ $application->valid_until->format('Y-m-d') }}
+                            </dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Date Applied</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">Oct 25, 2025</dd>
+                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $application->created_at->format('M d, Y') }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Approval Date</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">Oct 26, 2025</dd>
+                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $application->updated_at->format('M d, Y') }}</dd>
                         </div>
                     </dl>
                 </x-card>
-                
+
                 <x-card header="Reason Provided">
-                    <p class="text-slate-700 leading-relaxed">{{ $reason }}</p>
+                    <p class="text-slate-700 leading-relaxed">{{ $application->reason }}</p>
                 </x-card>
 
                 @php
                     $timeline = [
-                        ['label' => 'Submitted', 'date' => 'Nov 28, 2025', 'status' => 'completed'],
-                        ['label' => 'Reviewed by Admin', 'date' => 'Nov 29, 2025', 'status' => 'completed'],
-                        ['label' => 'Pass Generated', 'date' => 'Nov 30, 2025', 'status' => 'current'],
+                        ['label' => 'Submitted', 'date' => $application->created_at->format('M d, Y'), 'status' => 'completed'],
+                        ['label' => 'Reviewed by Admin', 'date' => $application->updated_at->format('M d, Y'), 'status' => 'completed'],
+                        ['label' => 'Pass Generated', 'date' => $application->valid_from->format('M d, Y'), 'status' => 'current'],
                         ['label' => 'Archived', 'date' => '—', 'status' => 'upcoming'],
                     ];
                 @endphp
@@ -97,7 +88,7 @@
                     </ol>
                 </x-card>
             </div>
-            
+
             {{-- 2. QR Code --}}
             <div class="lg:col-span-1">
                 <x-card header="Pass Validation Code" class="h-full">
