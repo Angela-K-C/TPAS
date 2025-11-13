@@ -7,12 +7,20 @@ use App\Http\Controllers\TemporaryPassController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Models\TemporaryPass;
 
 /*
 |--------------------------------------------------------------------------
 | Frontend Routes (Main Application)
 |--------------------------------------------------------------------------
 */
+
+Route::get('/dashboard',function(){
+    $passes = TemporaryPass::latest()->take(10)->get();
+    return view('dashboard',['passes'=>$passes]);
+})->name('dashboard');
+
+
 
 // Redirect root to login choice
 Route::get('/', fn () => redirect()->route('login.choice'));
@@ -33,7 +41,11 @@ Route::match(['get', 'post'], '/login/student', function (Request $request) {
     return view('auth.student-login');
 })->name('student.login');
 
-Route::view('/dashboard', 'dashboard')->name('dashboard');
+Route::get('/dashboard',function(){
+    $passes = TemporaryPass::latest()->take(30)->get();
+    return view('dashboard',['passes'=>$passes]);
+})->name('dashboard');
+
 Route::view('/profile', 'profile')->name('profile');
 
 Route::view('/applications/create', 'application.create')->name('application.create');
