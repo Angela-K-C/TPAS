@@ -95,9 +95,9 @@ Route::post('/guest/applications', fn (Request $request) => redirect()
     ->with('status', 'Visitor pass submitted.')
 )->name('guest.application.store');
 
-Route::get('/guest/applications/{application}', fn (string $application) =>
-    view('guest.application-show')
-)->name('guest.application.show');
+Route::get('/guest/applications/{application}', function (TemporaryPass $application) {
+    return view('guest.application-show', ['application' => $application]);
+})->name('guest.application.show');
 
 /*
 |--------------------------------------------------------------------------
