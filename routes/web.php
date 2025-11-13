@@ -17,13 +17,6 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard',function(){
-    $passes = TemporaryPass::latest()->take(10)->get();
-    return view('dashboard',['passes'=>$passes]);
-})->name('dashboard');
-
-
-
 // Redirect root to login choice
 Route::get('/', fn () => redirect()->route('login.choice'));
 
@@ -36,17 +29,19 @@ Route::view('/login', 'auth.login-choice')->name('login.choice');
 |--------------------------------------------------------------------------
 */
 
-Route::match(['get', 'post'], '/login/student', function (Request $request) {
-    if ($request->isMethod('post')) {
-        return redirect()->route('dashboard')->with('status', 'Welcome back, Student.');
-    }
-    return view('auth.student-login');
-})->name('student.login');
+Route::middleware('guest:university')->group(function () {
+    Route::get('/login/student', [StudentController::class, 'showLoginForm'])->name('student.login');
+    Route::post('/login/student', [StudentController::class, 'login'])->name('student.login.submit');
+});
 
 Route::get('/dashboard',function(){
     $passes = TemporaryPass::latest()->take(30)->get();
     return view('dashboard',['passes'=>$passes]);
 })->name('dashboard');
+
+Route::post('/student/logout', [StudentController::class, 'logout'])
+    ->middleware('auth:university')
+    ->name('student.logout');
 
 Route::view('/profile', 'profile')->name('profile');
 

@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Auth;
 class StudentController extends Controller
 {
     // Show login form
-    public function showLogin() {
+    public function showLoginForm()
+    {
         if (Auth::guard('university')->check()) {
-            // Student already logged in, redirect
-            // @TODO: Change Redirect Location
-            return redirect()->route('test.home')->with('info', 'You are already logged in as Student.');
+            return redirect()->route('dashboard');
         }
 
-        return view('test.student');
+        return view('auth.student-login');
     }
 
     // Handle login form submission
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         // Validate input
         $request->validate([
             'email' => 'required|email',
@@ -30,20 +30,19 @@ class StudentController extends Controller
 
         if (Auth::guard('university')->attempt($credentials)) {
             // Login successful
-            // @TODO: Change Redirect Location
-            return redirect()->route('test.home')
-                ->with('success', 'Student logged in successfully!');
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard'))
+                ->with('status', 'Welcome back!');
         }
 
         // Login failed
-        return back()->withErrors(['email' => 'Invalid credentials.']);
+        return back()->withErrors(['email' => 'Invalid credentials.'])->onlyInput('email');
     }
 
     // Logout method
     public function logout()
     {
         Auth::guard('university')->logout();
-        // @TODO: Change Redirect Location
-        return redirect()->route('test.login')->with('success', 'Logged out successfully!');
+        return redirect()->route('student.login')->with('status', 'Logged out successfully!');
     }
 }
