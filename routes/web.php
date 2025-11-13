@@ -77,7 +77,18 @@ Route::match(['get', 'post'], '/login/guest', function (Request $request) {
     return view('auth.guest-login');
 })->name('guest.login');
 
-Route::view('/guest/dashboard', 'guest.dashboard')->name('guest.dashboard');
+Route::get('/guest/dashboard', function () {
+    $guest = auth('guest')->user();
+    $passes = $guest
+        ? TemporaryPass::where('passable_type', get_class($guest))
+            ->where('passable_id', $guest->id)
+            ->latest()
+            ->get()
+        : collect();
+
+    return view('guest.dashboard', ['passes' => $passes]);
+})->name('guest.dashboard');
+
 Route::view('/guest/applications/create', 'guest.application-create')->name('guest.application.create');
 Route::post('/guest/applications', fn (Request $request) => redirect()
     ->route('guest.dashboard')
