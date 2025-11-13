@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\SecurityAuthController;
+use App\Http\Controllers\SecurityVerificationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TemporaryPassController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
 use App\Models\TemporaryPass;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -173,3 +174,22 @@ Route::view('/admin/reports/lost-id', 'admin.reports.lost-id')->name('admin.repo
 */
 
 Route::post('/logout', fn () => redirect()->route('login.choice'))->name('logout');
+
+/*
+|--------------------------------------------------------------------------
+| Security Guard Portal
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('security')->name('security.')->group(function () {
+    Route::middleware('guest:security')->group(function () {
+        Route::get('/login', [SecurityAuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/login', [SecurityAuthController::class, 'login'])->name('login.submit');
+    });
+
+    Route::middleware('auth:security')->group(function () {
+        Route::post('/logout', [SecurityAuthController::class, 'logout'])->name('logout');
+        Route::get('/verify', [SecurityVerificationController::class, 'showPortal'])->name('verify');
+        Route::post('/lookup', [SecurityVerificationController::class, 'lookup'])->name('lookup');
+    });
+});
