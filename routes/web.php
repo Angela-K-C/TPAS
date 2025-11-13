@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\TemporaryPass;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -156,7 +157,13 @@ Route::post('/admin/applications/{application}/reject', function ($id) {
 })->name('admin.applications.reject');
 
 // Passes and Reports
-Route::view('/admin/passes/expired', 'admin.passes.expired')->name('admin.passes.expired');
+
+Route::get('/admin/passes/expired', function () {
+    $expiredPasses = TemporaryPass::where('valid_until', '<', Carbon::now())->get();
+
+    return view('admin.passes.expired', ['expiredPasses' => $expiredPasses]);
+})->name('admin.passes.expired');
+
 Route::view('/admin/reports/lost-id', 'admin.reports.lost-id')->name('admin.reports.lost.id');
 
 /*
