@@ -142,14 +142,12 @@ Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.logi
 Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
 // Admin routes (protected)
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function () {
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('applications', [AdminController::class, 'manageApplications'])->name('admin.applications.manage');
     Route::get('applications/{application}', [AdminController::class, 'reviewApplication'])->name('admin.applications.review');
     Route::post('applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('admin.applications.approve');
     Route::post('applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('admin.applications.reject');
-
     Route::get('passes/expired', [AdminController::class, 'expiredPasses'])->name('passes.expired');
     Route::get('admin/reports/lost-id', [AdminController::class, 'lostIdReports'])->name('admin.reports.lost.id');
-
 });

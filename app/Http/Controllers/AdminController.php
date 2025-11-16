@@ -11,7 +11,7 @@ class AdminController extends Controller
     // Show login form
     public function showLogin()
     {
-        if (Auth::guard('web')->check()) {
+        if (Auth::guard('admin')->check()) {
             // Admin already logged in, redirect
             return redirect()->route('admin.dashboard')->with('info', 'You are already logged in as Admin.');
         }
@@ -28,7 +28,7 @@ class AdminController extends Controller
         ]);
         $credentials = $request->only('email', 'password');
 
-        if (Auth::guard('web')->attempt($credentials)) {
+        if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
 
             return redirect()->route('admin.dashboard')->with('success', 'Logged in successfully!');
@@ -40,7 +40,7 @@ class AdminController extends Controller
     // Logout method
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
+        Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -81,7 +81,7 @@ class AdminController extends Controller
     {
         $application->update([
             'status' => 'Approved',
-            'approved_by' => Auth::user()->name, // Make sure 'approved_by' column exists
+            'approved_by' => Auth::guard('admin')->user()->name,
             'admin_notes' => $request->admin_notes,
             'reviewed_at' => now(),
         ]);
@@ -95,7 +95,7 @@ class AdminController extends Controller
     {
         $application->update([
             'status' => 'Rejected',
-            'approved_by' => Auth::user()->name,
+            'approved_by' => Auth::guard('admin')->user()->name,
             'admin_notes' => $request->admin_notes,
             'reviewed_at' => now(),
         ]);

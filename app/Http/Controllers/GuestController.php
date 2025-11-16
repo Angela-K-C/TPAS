@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Guest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\TemporaryPass;
 
 class GuestController extends Controller
 {
@@ -95,7 +96,7 @@ class GuestController extends Controller
         return view('guest.dashboard', compact('passes'));
     }
 
-    p// Show application creation form
+    // Show application creation form
     public function createApplication()
     {
         $guest = Auth::guard('guest')->user();
