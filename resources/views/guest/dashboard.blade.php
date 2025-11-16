@@ -1,6 +1,13 @@
 {{-- resources/views/guest/dashboard.blade.php --}}
+@php
+    $guestName = auth('guest')->user()?->name ?? 'Guest';
+@endphp
 
-<x-dashboard-layout title="Guest Dashboard" user="Guest">
+<x-dashboard-layout 
+title="Guest Dashboard" 
+user="{{ $guestName }}"
+ :logoutRoute="route('guest.logout')"
+>
 
     <div class="space-y-8">
         {{-- Hero strip with action buttons --}}
@@ -48,10 +55,13 @@
                                 <tr>
                                     <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->id }}</td>
                                     <td class="px-6 py-4 text-deep-slate">VST-{{ $pass->id }}</td>
-                                    <td class="px-6 py-4 text-deep-slate">{{ $pass->passable_id }}</td>
-                                    <td class="px-6 py-4 text-warm-gray">{{ $pass->reason }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->national_id  ?? 'N/A'}}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->host_name ?? '—' }}</td> 
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->host_department ?? '—' }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->purpose ?? '—' }}</td>
                                     <td class="px-6 py-4 text-warm-gray">
-                                        {{ $pass->valid_from->format('M d') }} - {{ $pass->valid_until->format('M d, Y') }}
+                                       {{ optional($pass->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($pass->valid_until)->format('M d, Y') ?: 'N/A' }}
+
                                     </td>
                                     <td class="px-6 py-4">
                                         <x-status-badge :status="$pass->status" />

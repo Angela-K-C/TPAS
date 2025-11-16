@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class TemporaryPass extends Model
 {
@@ -51,6 +50,7 @@ class TemporaryPass extends Model
      * @var array<string, string>
      */
     protected $casts = [
+
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
     ];
@@ -112,5 +112,4 @@ class TemporaryPass extends Model
     {
         return self::MEMBER_REASON_LABELS;
     }
-
 }

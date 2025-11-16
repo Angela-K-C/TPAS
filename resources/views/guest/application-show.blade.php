@@ -1,6 +1,4 @@
-{{-- resources/views/guest/application-show.blade.php --}}
-
-<x-dashboard-layout title="Visitor Application Detail" user="Guest">
+<x-dashboard-layout title="Visitor Application Detail" :user="auth()->user()->name">
 
     <div class="max-w-6xl mx-auto space-y-6">
 
@@ -26,26 +24,24 @@
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 text-base">
                         <div>
                             <dt class="text-slate-500">Visitor Name</dt>
-                            <dd class="mt-1 font-semibold text-slate-900">
-                                {{ class_basename($application->passable_type) }} #{{ $application->passable_id }}
-                            </dd>
+                            <dd class="mt-1 font-semibold text-slate-900">{{ $application->passable->name ?? 'Guest' }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500">National ID</dt>
-                            <dd class="mt-1 text-slate-900">{{ $application->passable_id }}</dd>
+                            <dd class="mt-1 text-slate-900">{{ $application->national_id ?? 'N/A' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-slate-500">Host / Department</dt>
+                            <dt class="text-slate-500">Host Name</dt>
                             <dd class="mt-1 text-slate-900">{{ $application->host_name ?? '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-slate-500">Host Location</dt>
-                            <dd class="mt-1 text-slate-900">{{ $application->host_location ?? '—' }}</dd>
+                            <dt class="text-slate-500">Host Department</dt>
+                            <dd class="mt-1 text-slate-900">{{ $application->host_department ?? '—' }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500">Visit Duration</dt>
                             <dd class="mt-1 text-slate-900">
-                                {{ $application->valid_from->format('Y-m-d') }} to {{ $application->valid_until->format('Y-m-d') }}
+                               {{ $application->valid_from?->format('Y-m-d') ?? 'N/A' }} to {{ $application->valid_until?->format('Y-m-d') ?? 'N/A' }}
                             </dd>
                         </div>
                     </dl>
@@ -53,15 +49,15 @@
 
                 <x-card header="Visit Purpose">
                     <p class="text-slate-700 leading-relaxed">
-                        {{ $application->reason }}
+                        {{ $application->purpose ?? '—' }}
                     </p>
                 </x-card>
 
                 @php
                     $guestTimeline = [
-                        ['label' => 'Invitation Sent', 'date' => $application->created_at->format('M d, Y'), 'status' => 'completed'],
-                        ['label' => 'Security Review', 'date' => $application->updated_at->format('M d, Y'), 'status' => 'completed'],
-                        ['label' => 'QR Pass Ready', 'date' => $application->valid_from->format('M d, Y'), 'status' => 'current'],
+                        ['label' => 'Invitation Sent', 'date' => $application->created_at?->format('M d, Y') ?? 'N/A', 'status' => 'completed'],
+                        ['label' => 'Security Review', 'date' => $application->updated_at?->format('M d, Y') ?? 'N/A', 'status' => 'completed'],
+                        ['label' => 'QR Pass Ready', 'date' => $application->valid_from?->format('M d, Y') ?? 'pending', 'status' => 'current'],
                     ];
                 @endphp
 

@@ -2,24 +2,8 @@
 
 <x-dashboard-layout title="Admin Review Application" user="Admin">
 
-    {{-- Dummy data for structure review (replace with actual PHP variables passed by the Controller) --}}
+    {{-- Using the actual application object passed from the controller --}}
     @php
-        // ADMIN CONTEXT: Application data skeleton
-        $application = (object)[
-            'id' => '346tcvbn563456gf',
-            'status' => 'Pending', // Change status here to test Approved/Rejected states
-            'studentName' => 'Ronald Richards',
-            'studentId' => '4600',
-            'passType' => 'Temporary Visitor Access',
-            'startDate' => '2025-12-01',
-            'endDate' => '2025-12-07',
-            'reason' => 'Temporary permit for family visit during holidays.',
-            'date_applied' => 'Oct 25, 2025',
-            'approver_name' => 'Admin User Smith',
-            'pass_key' => 'TEMP-XYZ-123',
-            'admin_notes' => 'The duration seems fine, awaiting final review.', // Example of previous internal notes
-        ];
-        
         $applicationId = $application->id;
         $status = $application->status;
     @endphp
@@ -28,8 +12,11 @@
 
         {{-- Top Header Row --}}
         <div class="flex items-center justify-between pb-4 border-b border-stroke">
-            <a href="{{ route('admin.applications.manage') }}" class="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:text-iris flex items-center space-x-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <a href="{{ route('admin.admin.applications.manage') }}" 
+               class="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:text-iris flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
                 <span>Back to Applications List</span>
             </a>
             
@@ -46,10 +33,10 @@
             <x-status-badge :status="$status" class="ml-4 text-base" />
         </h2>
 
-        {{-- Main Detail Grid (Details + Action Panel) --}}
+        {{-- Main Detail Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {{-- 1. Application Details (Left/Main Column) --}}
+
+            {{-- 1. Application Details (Left Column) --}}
             <div class="lg:col-span-2 space-y-6">
                 <x-card header="Applicant Details">
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 text-base">
@@ -119,54 +106,42 @@
             <div class="lg:col-span-1">
                 
                 @if ($status === 'Pending')
-                    {{-- ADMIN ACTION PANEL: Only shown if Status is Pending --}}
+                    {{-- ADMIN ACTION PANEL --}}
                     <x-card header="Review & Decision" class="h-full bg-yellow-50/50 border-4 border-dashed border-yellow-200">
                         <p class="text-sm text-slate-700 mb-4 font-medium">
                             Make a decision on this application. Use the notes field below to document the rationale.
                         </p>
-                        
-                        {{-- Form action should use your resource route, e.g., 'application.update' --}}
-                        <form action="{{ route('application.update', $applicationId) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            
-                            {{-- Input for Admin Comment/Notes (Required for rejection, optional for approval) --}}
-                            <div class="mb-4">
-                                <label for="admin_notes" class="block text-sm font-medium text-slate-700">Admin Notes (Mandatory for rejection)</label>
-                                <textarea name="admin_notes" id="admin_notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-iris focus:ring-iris sm:text-sm"></textarea>
-                            </div>
 
-                            <input type="hidden" name="action_type" id="action_type">
+                        {{-- Approve & Reject Forms --}}
+                        <div class="flex flex-col gap-3">
+                            {{-- Approve --}}
+                            <form action="{{ route('admin.applications.approve', $application->id) }}" method="POST">
+                                @csrf
+                                <x-button type="primary" class="w-full">Approve Application</x-button>
+                            </form>
 
-                            {{-- Approve Button (filled primary) --}}
-                            <div class="flex flex-col gap-3">
-                                <x-button type="primary" class="w-full" onclick="document.getElementById('action_type').value='approve';">
-                                    Approve Application
-                                </x-button>
-                                <x-button type="secondary" class="w-full border border-red-500 hover:bg-red-50" onclick="document.getElementById('action_type').value='reject';">
-                                    Reject Application
-                                </x-button>
-                            </div>
-                        </form>
+                            {{-- Reject --}}
+                            <form action="{{ route('admin.applications.reject', $application->id) }}" method="POST">
+                                @csrf
+                                <x-button type="secondary" class="w-full border border-red-500 hover:bg-red-50">Reject Application</x-button>
+                            </form>
+                        </div>
                     </x-card>
 
                 @elseif (in_array($status, ['Approved', 'Active']))
-                    {{-- Pass Key View for reference --}}
+                    {{-- Pass Key / QR Code View --}}
                     <x-card header="Generated Pass Key" class="h-full bg-mint/50 border-2 border-mint">
                         <div class="flex flex-col items-center justify-center space-y-4">
                             <p class="text-2xl font-extrabold tracking-widest text-mint">{{ $application->pass_key }}</p>
                             <div class="w-full max-w-[200px] aspect-square border border-stroke rounded-2xl flex items-center justify-center text-slate-400">
-                                
-
-[Image of QR Code]
-
+                                [QR Code Placeholder]
                             </div>
                             <p class="text-center text-sm font-medium text-slate-500 dark:text-slate-300">Pass Valid for use.</p>
                         </div>
                     </x-card>
                 
                 @else
-                    {{-- General Message for Rejected/Expired Statuses --}}
+                    {{-- General Message for Rejected/Expired --}}
                     <x-card header="Decision Finalized" class="h-full">
                         <div class="text-center py-8">
                             <p class="text-lg font-semibold text-red-600">Application {{ $status }}</p>

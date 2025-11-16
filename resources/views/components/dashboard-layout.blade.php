@@ -1,6 +1,6 @@
 {{-- resources/views/components/dashboard-layout.blade.php --}}
 
-@props(['title' => 'Dashboard', 'user' => 'Student'])
+@props(['title' => 'Dashboard', 'user' => 'Student', 'logoutRoute' => route('student.logout') ])
 
 @extends('layouts.app')
 
@@ -11,9 +11,9 @@
     {{-- <x-navbar :user-label="$user" /> --}}
 
     @if ($user === 'Admin')
-    <x-admin-navbar :user-label="$user" />
+    <x-admin-navbar :user-label="$user" :logoutRoute="$logoutRoute" />
 @else
-    <x-navbar :user-label="$user" />
+    <x-navbar :user-label="$user" :logoutRoute="$logoutRoute" />
 @endif
 
     {{-- 2. Page Header --}}

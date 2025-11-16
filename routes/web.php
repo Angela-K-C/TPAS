@@ -4,30 +4,27 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TemporaryPassController;
+use App\Models\Guest;
+use App\Models\TemporaryPass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Models\TemporaryPass;
-use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
-| Frontend Routes (Main Application)
+| Frontend Routes
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard',function(){
-    $passes = TemporaryPass::latest()->take(10)->get();
-    return view('dashboard',['passes'=>$passes]);
-})->name('dashboard');
-
-
-
-// Redirect root to login choice
+// Root redirects to login choice
 Route::get('/', fn () => redirect()->route('login.choice'));
 
 // Login choice page
-Route::view('/login', 'auth.login-choice')->name('login.choice');
+Route::view('/login/choice', 'auth.login-choice')->name('login.choice');
+
+Route::get('/login', function () {
+    return redirect()->route('login.choice');
+})->name('login');
 
 /*
 |--------------------------------------------------------------------------
@@ -35,35 +32,35 @@ Route::view('/login', 'auth.login-choice')->name('login.choice');
 |--------------------------------------------------------------------------
 */
 
-Route::match(['get', 'post'], '/login/student', function (Request $request) {
-    if ($request->isMethod('post')) {
-        return redirect()->route('dashboard')->with('status', 'Welcome back, Student.');
-    }
-    return view('auth.student-login');
-})->name('student.login');
+// Student login form
+Route::get('/login/student', [StudentController::class, 'showLogin'])->name('student.login.form');
+Route::post('/login/student', [StudentController::class, 'login'])->name('student.login');
 
-Route::get('/dashboard',function(){
-    $passes = TemporaryPass::latest()->take(30)->get();
-    return view('dashboard',['passes'=>$passes]);
-})->name('dashboard');
+// Protected student routes
+Route::middleware('auth:university')->group(function () {
+    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
-Route::view('/profile', 'profile')->name('profile');
+    Route::middleware('auth:university')->group(function () {
+        Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
+    });
 
-Route::view('/applications/create', 'application.create')->name('application.create');
-Route::post('/applications', fn (Request $request) => redirect()
-    ->route('dashboard')
-    ->with('status', 'Temporary pass submitted.')
-)->name('application.store');
+    Route::view('/applications/create', 'application.create')->name('application.create');
+    Route::post('/applications', [StudentController::class, 'applyTemporaryPass'])
+        ->name('application.store');
 
-Route::get('/applications/{application}', function (TemporaryPass $application) {
-    return view('application.show', ['application' => $application]);
-})->name('application.show');
+    Route::get('/applications/{application}', function (TemporaryPass $application) {
+        return view('application.show', ['application' => $application]);
+    })->name('application.show');
 
-Route::view('/report/lost-id', 'report.lost-id')->name('report.lost.id');
-Route::post('/report/lost-id', fn (Request $request) => redirect()
-    ->route('dashboard')
-    ->with('status', 'Lost ID reported.')
-)->name('report.lost.id.store');
+    Route::get('/report/lost-id', function () {
+        return view('report.lost-id');
+    })->name('report.lost.id');
+
+    Route::post('/report/lost-id', [StudentController::class, 'storeLostId'])
+        ->name('report.lost.id.store');
+
+    Route::post('/student/logout', [StudentController::class, 'logout'])->name('student.logout');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -71,34 +68,67 @@ Route::post('/report/lost-id', fn (Request $request) => redirect()
 |--------------------------------------------------------------------------
 */
 
-Route::match(['get', 'post'], '/login/guest', function (Request $request) {
-    if ($request->isMethod('post')) {
-        return redirect()->route('guest.dashboard')->with('status', 'Welcome back, Guest.');
-    }
-    return view('auth.guest-login');
+// Guest login form
+Route::get('/login/guest', function () {
+    return view('auth.guest-login'); // Blade for guest login
 })->name('guest.login');
 
-Route::get('/guest/dashboard', function () {
-    $guest = auth('guest')->user();
-    $passes = $guest
-        ? TemporaryPass::where('passable_type', get_class($guest))
-            ->where('passable_id', $guest->id)
+// Guest profile
+Route::middleware('auth:guest')->group(function () {
+    Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
+});
+
+// Guest login submission
+Route::post('/login/guest', function (Request $request) {
+    // For testing, log in the first guest
+    $guest = Guest::where('email', $request->email)->first();
+    if ($guest) {
+        Auth::guard('guest')->login($guest);
+    }
+
+    return redirect()->route('guest.dashboard')->with('status', 'Welcome back, Guest.');
+})->name('guest.login.submit');
+
+// Guest protected routes
+Route::middleware('auth:guest')->group(function () {
+
+    // Guest dashboard
+    Route::get('/guest/dashboard', function () {
+        $passes = \App\Models\TemporaryPass::where('passable_type', Guest::class)
+            ->where('passable_id', auth('guest')->id())
             ->latest()
-            ->get()
-        : collect();
+            ->get();
 
-    return view('guest.dashboard', ['passes' => $passes]);
-})->name('guest.dashboard');
+        return view('guest.dashboard', compact('passes'));
+    })->name('guest.dashboard');
 
-Route::view('/guest/applications/create', 'guest.application-create')->name('guest.application.create');
-Route::post('/guest/applications', fn (Request $request) => redirect()
-    ->route('guest.dashboard')
-    ->with('status', 'Visitor pass submitted.')
-)->name('guest.application.store');
+    // Guest logout
+    Route::post('/guest/logout', function () {
+        Auth::guard('guest')->logout();
 
-Route::get('/guest/applications/{application}', function (TemporaryPass $application) {
-    return view('guest.application-show', ['application' => $application]);
-})->name('guest.application.show');
+        return redirect()->route('guest.login');
+    })->name('guest.logout');
+
+    // Show form to create a guest application
+    Route::get('/guest/applications/create', function () {
+        $guest = auth('guest')->user();
+
+        return view('guest.application-create', compact('guest'));
+    })->name('guest.application.create');
+
+    // Store the guest application
+    Route::post('/guest/applications', [TemporaryPassController::class, 'store'])
+        ->name('guest.application.store');
+
+    // View a specific guest application
+    Route::get('/guest/applications/{application}', function (\App\Models\TemporaryPass $application) {
+        if ($application->passable_id !== auth('guest')->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('guest.application-show', compact('application'));
+    })->name('guest.application.show');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -106,70 +136,20 @@ Route::get('/guest/applications/{application}', function (TemporaryPass $applica
 |--------------------------------------------------------------------------
 */
 
-// Authentication
-Route::view('/admin/login', 'admin.login')->name('admin.login');
+// Admin Login
+Route::get('/admin/login', [AdminController::class, 'showLogin'])->name('admin.login');
+Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
-// Dashboard
-Route::get('/admin/dashboard', function () {
-    $passes = TemporaryPass::latest()->take(5)->get();
-    return view('admin.dashboard', ['passes' => $passes]);
-})->name('admin.dashboard');
+// Admin routes (protected)
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('applications', [AdminController::class, 'manageApplications'])->name('admin.applications.manage');
+    Route::get('applications/{application}', [AdminController::class, 'reviewApplication'])->name('admin.applications.review');
+    Route::post('applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('admin.applications.approve');
+    Route::post('applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('admin.applications.reject');
 
+    Route::get('passes/expired', [AdminController::class, 'expiredPasses'])->name('passes.expired');
+    Route::get('admin/reports/lost-id', [AdminController::class, 'lostIdReports'])->name('admin.reports.lost.id');
 
-// Applications
-Route::get('/admin/applications/manage', function (Request $request) {
-    $status = $request->query('status', 'Pending');
-
-    $query = TemporaryPass::query();
-
-    if ($status !== 'All') {
-        $query->where('status', $status);
-    }
-
-    $applications = $query->latest()->get();
-
-    return view('admin.applications.manage', [
-        'applications' => $applications,
-        'currentFilter' => $status, 
-    ]);
-})->name('admin.applications.manage');
-
-
-Route::view('/admin/applications/show', 'admin.applications.show')->name('admin.applications.show');
-
-Route::get('/admin/applications/review/{application}', function ($id) {
-    $application = TemporaryPass::findOrFail($id);
-    return view('admin.application-review', ['application' => $application]);
-})->name('admin.applications.review');
-
-Route::post('/admin/applications/{application}/approve', function ($id) {
-    $application = TemporaryPass::findOrFail($id);
-    $application->status = 'approved';
-    $application->save();
-    return redirect()->route('admin.dashboard');
-})->name('admin.applications.approve');
-
-Route::post('/admin/applications/{application}/reject', function ($id) {
-    $application = TemporaryPass::findOrFail($id);
-    $application->status = 'rejected';
-    $application->save();
-    return redirect()->route('admin.dashboard');
-})->name('admin.applications.reject');
-
-// Passes and Reports
-
-Route::get('/admin/passes/expired', function () {
-    $expiredPasses = TemporaryPass::where('valid_until', '<', Carbon::now())->get();
-
-    return view('admin.passes.expired', ['expiredPasses' => $expiredPasses]);
-})->name('admin.passes.expired');
-
-Route::view('/admin/reports/lost-id', 'admin.reports.lost-id')->name('admin.reports.lost.id');
-
-/*
-|--------------------------------------------------------------------------
-| Logout
-|--------------------------------------------------------------------------
-*/
-
-Route::post('/logout', fn () => redirect()->route('login.choice'))->name('logout');
+});

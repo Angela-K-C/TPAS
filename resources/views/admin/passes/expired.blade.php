@@ -46,7 +46,7 @@
                                 <x-status-badge :status="$pass->status" />
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <a href="{{ route('admin.applications.review', ['application' => $pass->id]) }}"
+                                <a href="{{ route('admin.admin.applications.review', ['application' => $pass->id]) }}"
                                    class="text-brand-primary font-medium hover:underline">
                                     View Details
                                 </a>

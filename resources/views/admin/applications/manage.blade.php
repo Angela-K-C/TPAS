@@ -18,7 +18,7 @@
             @endphp
 
             @foreach ($filters as $filter)
-                <a href="{{ route('admin.applications.manage', ['status' => $filter]) }}"
+                <a href="{{ route('admin.admin.applications.manage', ['status' => $filter]) }}"
                    class="px-3 py-1 text-sm font-medium rounded-md transition duration-150 ease-in-out
                           @if ($currentFilter === $filter) bg-white shadow-sm text-brand-primary
                           @else text-slate-500 hover:bg-gray-200 @endif">
@@ -53,13 +53,13 @@
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->type ?? '—' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->created_at->diffForHumans() }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">
-                                {{ $app->valid_from->format('M d') }} - {{ $app->valid_until->format('M d') }}
+                                {{ $app->valid_from?->format('M d') }} - {{ $app->valid_until?->format('M d') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <x-status-badge :status="$app->status" />
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <a href="{{ route('admin.applications.review', ['application' => $app->id]) }}"
+                                <a href="{{ route('admin.admin.applications.review', ['application' => $app->id]) }}"
                                    class="text-brand-primary font-medium hover:underline">
                                     View
                                 </a>
