@@ -206,16 +206,9 @@ class TemporaryPassController extends Controller
         }
 
         $temporaryPass->save();
-<<<<<<< HEAD
-        
-
-        // Redirect to appropriate route
-        return redirect()->route('passes.index')->with('success', 'Successfully updated, email sent to user, email sent to user!');
-=======
     
         // Redirect to appropriate route
         return redirect()->route('passes.index')->with('success', 'Successfully updated, email sent to user!');
->>>>>>> d69ec83 (Email functionality)
     }
 
     /**
