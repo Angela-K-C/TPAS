@@ -12,16 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::connection('university')->table('temporary_passes', function (Blueprint $table) {
-            // Add visitor-related columns only if they don't exist
-            if (! Schema::hasColumn('temporary_passes', 'host_name')) {
+            if (!Schema::connection('university')->hasColumn('temporary_passes', 'host_name')) {
                 $table->string('host_name')->nullable()->after('reason');
             }
 
-            if (! Schema::hasColumn('temporary_passes', 'host_department')) {
+            if (!Schema::connection('university')->hasColumn('temporary_passes', 'host_department')) {
                 $table->string('host_department')->nullable()->after('host_name');
             }
 
-            if (! Schema::hasColumn('temporary_passes', 'purpose')) {
+            if (!Schema::connection('university')->hasColumn('temporary_passes', 'purpose')) {
                 $table->text('purpose')->nullable()->after('host_department');
             }
         });
@@ -33,15 +32,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::connection('university')->table('temporary_passes', function (Blueprint $table) {
-            if (Schema::hasColumn('temporary_passes', 'host_name')) {
+            if (Schema::connection('university')->hasColumn('temporary_passes', 'host_name')) {
                 $table->dropColumn('host_name');
             }
 
-            if (Schema::hasColumn('temporary_passes', 'host_department')) {
+            if (Schema::connection('university')->hasColumn('temporary_passes', 'host_department')) {
                 $table->dropColumn('host_department');
             }
 
-            if (Schema::hasColumn('temporary_passes', 'purpose')) {
+            if (Schema::connection('university')->hasColumn('temporary_passes', 'purpose')) {
                 $table->dropColumn('purpose');
             }
         });
