@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::connection('university')->create('temporary_passes', function (Blueprint $table) {
+        Schema::create('temporary_passes', function (Blueprint $table) {
             $table->id();
             // Polymorphic Columns: creates `passable_id` and `passable_type`
             $table->morphs('passable');
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection('university')->dropIfExists('temporary_passes');
+        Schema::dropIfExists('temporary_passes');
     }
 };
