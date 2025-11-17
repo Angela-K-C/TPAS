@@ -60,6 +60,7 @@ class TemporaryPass extends Model
      * @var array<string, string>
      */
     protected $casts = [
+
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
     ];

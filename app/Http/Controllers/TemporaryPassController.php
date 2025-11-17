@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TemporaryPass;
-use App\Models\Student;
+use App\Mail\WelcomeMail;
 use App\Models\Guest;
+use App\Models\Student;
+use App\Models\TemporaryPass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TemporaryPassController extends Controller
 {
@@ -117,8 +120,27 @@ class TemporaryPassController extends Controller
 
         $temporaryPass->update($request->only(['status', 'valid_from', 'valid_until']));
 
+        // Get details of user who applied
+        $user = $temporaryPass->passable;
+        $username = $user->name;
+        $recipient = $user->email;
+
+        // If rejected, send email & exit
+        if ($request->input('status') === "rejected") {
+            $status = "rejected";
+            // Send email notifying user
+            Mail::to($recipient)
+                ->send(new WelcomeMail($username, $status, null));
+
+            // Redirect to appropriate route
+            return redirect()->route('passes.index')->with('success', 'Pass rejected, email sent!');
+        }
+
+        // If approved
         if ($request->input('status') === 'approved') {
             $temporaryPass->approved_by = Auth::guard('web')->id();
+            $status = "approved";
+            
 
             // Set validity period based on reason
             $now = now();
@@ -154,11 +176,18 @@ class TemporaryPassController extends Controller
                     $temporaryPass->valid_until = $now->copy()->addDay();
                     break;
             }
+
+            // Generate unique QR token
+            $temporaryPass->qr_code_token = (String) Str::uuid();
+
+            // Send email with QR code
+            Mail::to($recipient)->send(new WelcomeMail($username, $status));
         }
-        
+
         $temporaryPass->save();
 
-        return redirect()->route('passes.index')->with('success', 'Successfully updated!');
+        // Redirect to appropriate route
+        return redirect()->route('passes.index')->with('success', 'Successfully updated, email sent to user!');
     }
 
     /**
@@ -173,6 +202,7 @@ class TemporaryPassController extends Controller
 
         $temporaryPass->delete();
 
+        // Redirect to appropriate route
         return redirect()->route('passes.index')->with('success', 'Successfully deleted!');
     }
 

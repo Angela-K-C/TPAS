@@ -7,21 +7,18 @@ use App\Http\Controllers\SecurityVerificationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TemporaryPassController;
 use App\Models\TemporaryPass;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Frontend Routes (Main Application)
+| Frontend Routes
 |--------------------------------------------------------------------------
 */
 
-// Redirect root to login choice
 Route::get('/', fn () => redirect()->route('login.choice'));
 
-// Login choice page
-Route::view('/login', 'auth.login-choice')->name('login.choice');
+Route::view('/login/choice', 'auth.login-choice')->name('login.choice');
+Route::get('/login', fn () => redirect()->route('login.choice'))->name('login');
 
 /*
 |--------------------------------------------------------------------------
@@ -34,32 +31,22 @@ Route::middleware('guest:university')->group(function () {
     Route::post('/login/student', [StudentController::class, 'login'])->name('student.login.submit');
 });
 
-Route::get('/dashboard',function(){
-    $passes = TemporaryPass::latest()->take(30)->get();
-    return view('dashboard',['passes'=>$passes]);
-})->name('dashboard');
+Route::middleware('auth:university')->group(function () {
+    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+    Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
 
-Route::post('/student/logout', [StudentController::class, 'logout'])
-    ->middleware('auth:university')
-    ->name('student.logout');
+    Route::get('/applications/create', [StudentController::class, 'showTemporaryPassForm'])->name('application.create');
+    Route::post('/applications', [StudentController::class, 'applyTemporaryPass'])->name('application.store');
 
-Route::view('/profile', 'profile')->name('profile');
+    Route::get('/applications/{application}', function (TemporaryPass $application) {
+        return view('application.show', ['application' => $application]);
+    })->name('application.show');
 
-Route::view('/applications/create', 'application.create')->name('application.create');
-Route::post('/applications', fn (Request $request) => redirect()
-    ->route('dashboard')
-    ->with('status', 'Temporary pass submitted.')
-)->name('application.store');
+    Route::get('/report/lost-id', fn () => view('report.lost-id'))->name('report.lost.id');
+    Route::post('/report/lost-id', [StudentController::class, 'storeLostId'])->name('report.lost.id.store');
 
-Route::get('/applications/{application}', function (TemporaryPass $application) {
-    return view('application.show', ['application' => $application]);
-})->name('application.show');
-
-Route::view('/report/lost-id', 'report.lost-id')->name('report.lost.id');
-Route::post('/report/lost-id', fn (Request $request) => redirect()
-    ->route('dashboard')
-    ->with('status', 'Lost ID reported.')
-)->name('report.lost.id.store');
+    Route::post('/student/logout', [StudentController::class, 'logout'])->name('student.logout');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -67,34 +54,19 @@ Route::post('/report/lost-id', fn (Request $request) => redirect()
 |--------------------------------------------------------------------------
 */
 
-Route::match(['get', 'post'], '/login/guest', function (Request $request) {
-    if ($request->isMethod('post')) {
-        return redirect()->route('guest.dashboard')->with('status', 'Welcome back, Guest.');
-    }
-    return view('auth.guest-login');
-})->name('guest.login');
+Route::middleware('guest:guest')->group(function () {
+    Route::get('/login/guest', [GuestController::class, 'showLogin'])->name('guest.login');
+    Route::post('/login/guest', [GuestController::class, 'login'])->name('guest.login.submit');
+});
 
-Route::get('/guest/dashboard', function () {
-    $guest = auth('guest')->user();
-    $passes = $guest
-        ? TemporaryPass::where('passable_type', get_class($guest))
-            ->where('passable_id', $guest->id)
-            ->latest()
-            ->get()
-        : collect();
-
-    return view('guest.dashboard', ['passes' => $passes]);
-})->name('guest.dashboard');
-
-Route::view('/guest/applications/create', 'guest.application-create')->name('guest.application.create');
-Route::post('/guest/applications', fn (Request $request) => redirect()
-    ->route('guest.dashboard')
-    ->with('status', 'Visitor pass submitted.')
-)->name('guest.application.store');
-
-Route::get('/guest/applications/{application}', function (TemporaryPass $application) {
-    return view('guest.application-show', ['application' => $application]);
-})->name('guest.application.show');
+Route::middleware('auth:guest')->group(function () {
+    Route::get('/guest/dashboard', [GuestController::class, 'dashboard'])->name('guest.dashboard');
+    Route::post('/guest/logout', [GuestController::class, 'logout'])->name('guest.logout');
+    Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
+    Route::get('/guest/applications/create', [GuestController::class, 'createApplication'])->name('guest.application.create');
+    Route::post('/guest/applications', [GuestController::class, 'storeApplication'])->name('guest.application.store');
+    Route::get('/guest/applications/{application}', [GuestController::class, 'showApplication'])->name('guest.application.show');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -102,7 +74,6 @@ Route::get('/guest/applications/{application}', function (TemporaryPass $applica
 |--------------------------------------------------------------------------
 */
 
-// Authentication
 Route::middleware('guest:web')->group(function () {
     Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
     Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
@@ -125,7 +96,7 @@ Route::prefix('admin')
 
 /*
 |--------------------------------------------------------------------------
-| Logout
+| Shared Routes
 |--------------------------------------------------------------------------
 */
 

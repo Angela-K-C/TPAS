@@ -9,12 +9,16 @@
             </a>
 
             <div class="flex gap-3">
-                <form method="POST" action="{{ route('admin.applications.approve', $application->id) }}">
+                <form method="POST" action="{{ route('passes.update', $application) }}">
                     @csrf
+                    @method('PUT')
+                    <input type="hidden" name="status" value="approved">
                     <x-button type="primary">Approve</x-button>
                 </form>
-                <form method="POST" action="{{ route('admin.applications.reject', $application->id) }}">
+                <form method="POST" action="{{ route('passes.update', $application) }}">
                     @csrf
+                    @method('PUT')
+                    <input type="hidden" name="status" value="rejected">
                     <x-button type="danger">Reject</x-button>
                 </form>
             </div>
@@ -44,7 +48,11 @@
                 <div>
                     <dt class="text-slate-500">Duration</dt>
                     <dd class="mt-1 text-slate-900">
-                        {{ $application->valid_from->format('Y-m-d') }} to {{ $application->valid_until->format('Y-m-d') }}
+                        @if ($application->valid_from && $application->valid_until)
+                            {{ $application->valid_from->format('Y-m-d') }} to {{ $application->valid_until->format('Y-m-d') }}
+                        @else
+                            —
+                        @endif
                     </dd>
                 </div>
             </dl>

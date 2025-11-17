@@ -53,7 +53,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->type ?? '—' }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->created_at->diffForHumans() }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">
-                                @if($app->valid_from && $app->valid_until)
+                                @if ($app->valid_from && $app->valid_until)
                                     {{ $app->valid_from->format('M d') }} - {{ $app->valid_until->format('M d') }}
                                 @else
                                     —

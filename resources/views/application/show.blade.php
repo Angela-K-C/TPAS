@@ -1,6 +1,6 @@
 {{-- resources/views/application/show.blade.php --}}
 
-<x-dashboard-layout title="Application Detail">
+<x-dashboard-layout title="Application Detail" :user="auth()->user()->name">
 
     <div class="max-w-6xl mx-auto space-y-6">
 

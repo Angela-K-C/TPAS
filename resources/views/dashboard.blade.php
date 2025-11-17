@@ -1,6 +1,8 @@
 {{-- resources/views/dashboard.blade.php --}}
 
-<x-dashboard-layout title="Dashboard">
+<x-dashboard-layout title="Dashboard"
+user="{{ auth()->user()->name }}" 
+    :logoutRoute="route('student.logout')">
 
     <div class="space-y-8">
 
@@ -55,13 +57,60 @@
                                     <td class="px-6 py-4 text-deep-slate">{{ $pass->passable_id }}</td>
                                     <td class="px-6 py-4 text-warm-gray">{{ class_basename($pass->passable_type) }}</td>
                                     <td class="px-6 py-4 text-warm-gray">
-                                        {{ $pass->valid_from->format('M d') }} - {{ $pass->valid_until->format('M d, Y') }}
+                                       {{ optional($pass->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($pass->valid_until)->format('M d, Y') ?: 'N/A' }}
+
                                     </td>
                                     <td class="px-6 py-4">
                                         <x-status-badge :status="$pass->status" />
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <a href="{{ route('application.show', ['application' => $pass->id]) }}" class="text-iris font-semibold">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </x-card>
+ 
+   
+        {{-- Lost ID Reports --}}
+        <x-card header="My Lost ID Reports">
+            @if ($lostIds->isEmpty())
+                <div class="text-center py-12 space-y-4">
+                    <p class="text-lg font-semibold text-deep-slate">No Lost ID reports yet</p>
+                    <p class="text-sm text-warm-gray">Any reports you make will appear here.</p>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="wire-table">
+                        <thead class="bg-slate-50 text-xs uppercase text-warm-gray tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4 text-left">#</th>
+                                <th class="px-6 py-4 text-left">Report ID</th>
+                                <th class="px-6 py-4 text-left">Admission No</th>
+                                <th class="px-6 py-4 text-left">Duration</th>
+                                <th class="px-6 py-4 text-left">Status</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-stroke text-sm">
+                            @foreach ($lostIds as $lost)
+                                <tr>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $lost->id }}</td>
+                                    <td class="px-6 py-4 text-deep-slate">TPAS-{{ $lost->id }}</td>
+                                    <td class="px-6 py-4 text-deep-slate">{{ $lost->passable_id }}</td>
+                                    <td class="px-6 py-4 text-warm-gray">
+                                        {{ optional($lost->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($lost->valid_until)->format('M d, Y') ?: 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <x-status-badge :status="$lost->status" />
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="{{ route('application.show', ['application' => $lost->id]) }}" class="text-iris font-semibold">
                                             View
                                         </a>
                                     </td>

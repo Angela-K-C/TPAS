@@ -14,7 +14,7 @@ class AdminController extends Controller
     public function showLoginForm()
     {
         if (Auth::guard('web')->check()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.dashboard')->with('info', 'You are already logged in as Admin.');
         }
 
         return view('admin.login');
@@ -32,7 +32,9 @@ class AdminController extends Controller
 
         if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+
+            return redirect()->intended(route('admin.dashboard'))
+                ->with('success', 'Logged in successfully!');
         }
 
         return back()->withErrors([
@@ -49,7 +51,7 @@ class AdminController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login');
+        return redirect()->route('admin.login')->with('status', 'Logged out successfully.');
     }
 
     /**

@@ -32,7 +32,7 @@
                 <span class="text-sm font-medium text-slate-500">
                     Hello, {{ $userLabel }}!
                 </span>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button type="submit" class="text-sm font-semibold text-iris hover:text-red-500">
                         Logout

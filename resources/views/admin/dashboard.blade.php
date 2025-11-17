@@ -1,6 +1,8 @@
 {{-- resources/views/admin/dashboard.blade.php --}}
 
-<x-dashboard-layout title="Admin Dashboard" user="Admin">
+<x-dashboard-layout title="Admin Dashboard" 
+user="Admin"
+:logoutRoute="route('admin.logout')">
 
     {{-- --- Top Action Buttons --- --}}
     <div class="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 mb-6">
