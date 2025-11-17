@@ -1,6 +1,13 @@
 {{-- resources/views/guest/dashboard.blade.php --}}
+@php
+    $guestName = auth('guest')->user()?->name ?? 'Guest';
+@endphp
 
-<x-dashboard-layout title="Guest Dashboard" user="Guest">
+<x-dashboard-layout 
+title="Guest Dashboard" 
+user="{{ $guestName }}"
+ :logoutRoute="route('guest.logout')"
+>
 
     <div class="space-y-8">
         {{-- Hero strip with action buttons --}}
@@ -14,20 +21,12 @@
             </div>
         </div>
 
-    {{-- Application History Table --}}
-    <x-card header="My Pass Applications">
-            @php
-                $guestApplications = [
-                    (object)['id' => 1, 'app_id' => 'VST-5120', 'national_id' => '37894561', 'duration' => 'Mar 03 - Mar 05, 2025', 'status' => 'Active', 'purpose' => 'Family Visit'],
-                    (object)['id' => 2, 'app_id' => 'VST-4988', 'national_id' => '57940213', 'duration' => 'Mar 12 - Mar 12, 2025', 'status' => 'Pending', 'purpose' => 'Interview'],
-                    (object)['id' => 3, 'app_id' => 'VST-4600', 'national_id' => '15975368', 'duration' => 'Feb 24 - Feb 24, 2025', 'status' => 'Inactive', 'purpose' => 'Orientation'],
-                ];
-            @endphp
-
-            @if(count($guestApplications) === 0)
+        {{-- Application History Table --}}
+        <x-card header="My Pass Applications">
+            @if ($passes->isEmpty())
                 <div class="text-center py-12 space-y-4">
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lilac/60 text-iris text-2xl font-hand">
-                        ✨
+                        
                     </div>
                     <div>
                         <p class="text-lg font-semibold text-deep-slate">No applications yet</p>
@@ -52,18 +51,23 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-stroke text-sm">
-                            @foreach ($guestApplications as $application)
+                            @foreach ($passes as $pass)
                                 <tr>
-                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $application->id }}</td>
-                                    <td class="px-6 py-4 text-deep-slate">{{ $application->app_id }}</td>
-                                    <td class="px-6 py-4 text-deep-slate">{{ $application->national_id }}</td>
-                                    <td class="px-6 py-4 text-warm-gray">{{ $application->purpose }}</td>
-                                    <td class="px-6 py-4 text-warm-gray">{{ $application->duration }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->id }}</td>
+                                    <td class="px-6 py-4 text-deep-slate">VST-{{ $pass->id }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->national_id  ?? 'N/A'}}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->host_name ?? '—' }}</td> 
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->host_department ?? '—' }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->purpose ?? '—' }}</td>
+                                    <td class="px-6 py-4 text-warm-gray">
+                                       {{ optional($pass->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($pass->valid_until)->format('M d, Y') ?: 'N/A' }}
+
+                                    </td>
                                     <td class="px-6 py-4">
-                                        <x-status-badge :status="$application->status" />
+                                        <x-status-badge :status="$pass->status" />
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('guest.application.show', ['application' => $application->app_id]) }}" class="text-iris font-semibold">
+                                        <a href="{{ route('guest.application.show', ['application' => $pass->id]) }}" class="text-iris font-semibold">
                                             View
                                         </a>
                                     </td>

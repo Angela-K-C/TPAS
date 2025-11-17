@@ -21,6 +21,12 @@
             <x-button type="secondary" href="{{ route('guest.login') }}" class="w-full">
                 Login as a Guest
             </x-button>
+
+            {{-- Admin Login --}}
+            <x-button type="tertiary" href="{{ route('admin.login') }}" class="w-full">
+                Login as an Admin
+            </x-button>
+            
         </div>
     </div>
 </div>

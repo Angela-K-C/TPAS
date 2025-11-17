@@ -8,7 +8,7 @@
         <h2 class="text-center text-3xl font-hand text-slate-900 dark:text-white">
             Guest Login
         </h2>
-        <form class="space-y-6" action="{{ route('guest.login') }}" method="POST">
+        <form class="space-y-6" action="{{ route('guest.login.submit') }}" method="POST">
             @csrf
             
             {{-- Email --}}

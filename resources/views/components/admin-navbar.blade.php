@@ -17,7 +17,7 @@
                    class="text-sm font-medium text-slate-600 hover:text-iris transition-colors">
                     Dashboard
                 </a>
-                <a href="{{ route('admin.applications.manage') }}"
+                <a href="{{ route('admin.admin.applications.manage') }}"
                    class="text-sm font-medium text-slate-600 hover:text-iris transition-colors">
                     Review Applications
                 </a>
@@ -32,7 +32,7 @@
                 <span class="text-sm font-medium text-slate-500">
                     Hello, {{ $userLabel }}!
                 </span>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button type="submit" class="text-sm font-semibold text-iris hover:text-red-500">
                         Logout
