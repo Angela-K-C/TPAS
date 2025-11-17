@@ -8,112 +8,139 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
-    // Show login form
-    public function showLogin()
+    /**
+     * Show the admin login screen.
+     */
+    public function showLoginForm()
     {
-        if (Auth::guard('admin')->check()) {
-            // Admin already logged in, redirect
+        if (Auth::guard('web')->check()) {
             return redirect()->route('admin.dashboard')->with('info', 'You are already logged in as Admin.');
         }
 
         return view('admin.login');
     }
 
-    // Logging in
+    /**
+     * Handle the admin sign in attempt.
+     */
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
-        $credentials = $request->only('email', 'password');
 
-        if (Auth::guard('admin')->attempt($credentials)) {
+        if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->route('admin.dashboard')->with('success', 'Logged in successfully!');
+            return redirect()->intended(route('admin.dashboard'))
+                ->with('success', 'Logged in successfully!');
         }
 
-        return back()->withErrors(['email' => 'Invalid credentials.']);
+        return back()->withErrors([
+            'email' => 'Invalid credentials.',
+        ])->onlyInput('email');
     }
 
-    // Logout method
+    /**
+     * Log out of the admin area.
+     */
     public function logout(Request $request)
     {
-        Auth::guard('admin')->logout();
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login')->with('success', 'Logged out successfully.');
+        return redirect()->route('admin.login')->with('status', 'Logged out successfully.');
     }
 
-    // Admin dashboard
+    /**
+     * Primary admin dashboard with metrics.
+     */
     public function dashboard()
     {
-        $passes = TemporaryPass::latest()->take(5)->get();
+        $this->ensureAdmin();
 
-        return view('admin.dashboard', compact('passes'));
+        $metrics = [
+            'pending' => TemporaryPass::where('status', 'pending')->count(),
+            'approved' => TemporaryPass::where('status', 'approved')->count(),
+            'rejected' => TemporaryPass::where('status', 'rejected')->count(),
+            'expired' => TemporaryPass::whereNotNull('valid_until')
+                ->where('valid_until', '<', now())
+                ->count(),
+        ];
+
+        $recentPasses = TemporaryPass::with(['passable'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('admin.dashboard', [
+            'metrics' => $metrics,
+            'passes' => $recentPasses,
+        ]);
     }
 
-    // List all applications with optional status filter
-    public function manageApplications(Request $request)
+    /**
+     * Manage applications with a status filter.
+     */
+    public function applicationsManage(Request $request)
     {
-        $status = $request->get('status', 'All');
+        $this->ensureAdmin();
 
-        $applications = $status === 'All'
-            ? TemporaryPass::latest()->get()
-            : TemporaryPass::where('status', $status)->latest()->get();
+        $filter = ucfirst(strtolower($request->query('status', 'Pending')));
+        $query = TemporaryPass::with('passable')->latest();
+
+        if ($filter !== 'All') {
+            $query->where('status', strtolower($filter));
+        }
+
+        $applications = $query->get();
 
         return view('admin.applications.manage', [
             'applications' => $applications,
-            'currentFilter' => $status,
+            'currentFilter' => $filter,
         ]);
     }
 
-    // Show single application for review
-    public function reviewApplication(TemporaryPass $application)
+    /**
+     * Review a single application.
+     */
+    public function applicationsReview(TemporaryPass $application)
     {
-        return view('admin.applications.review', compact('application'));
-    }
+        $this->ensureAdmin();
 
-    // Approve application
-    public function approveApplication(Request $request, TemporaryPass $application)
-    {
-        $application->update([
-            'status' => 'Approved',
-            'approved_by' => Auth::guard('admin')->user()->name,
-            'admin_notes' => $request->admin_notes,
-            'reviewed_at' => now(),
+        $application->load(['passable', 'approver']);
+        $application->ensureQrCodeAssets();
+
+        return view('admin.applications.review', [
+            'application' => $application,
         ]);
-
-        return redirect()->route('admin.admin.applications.manage')
-            ->with('success', 'Application approved successfully.');
     }
 
-    // Reject application
-    public function rejectApplication(Request $request, TemporaryPass $application)
+    /**
+     * View expired passes.
+     */
+    public function passesExpired()
     {
-        $application->update([
-            'status' => 'Rejected',
-            'approved_by' => Auth::guard('admin')->user()->name,
-            'admin_notes' => $request->admin_notes,
-            'reviewed_at' => now(),
+        $this->ensureAdmin();
+
+        $expiredPasses = TemporaryPass::with('passable')
+            ->whereNotNull('valid_until')
+            ->where('valid_until', '<', now())
+            ->orderByDesc('valid_until')
+            ->get();
+
+        return view('admin.passes.expired', [
+            'expiredPasses' => $expiredPasses,
         ]);
-
-        return redirect()->route('admin.admin.applications.manage')
-            ->with('error', 'Application rejected.');
     }
 
-    public function expiredPasses()
+    /**
+     * Ensure the current user is an authenticated admin.
+     */
+    private function ensureAdmin(): void
     {
-        $expiredPasses = TemporaryPass::where('valid_until', '<', now())->latest()->get();
-
-        return view('admin.passes.expired', compact('expiredPasses'));
-    }
-
-    public function lostIdReports()
-    {
-        // Return a view for lost ID reports, even if it's empty for now
-        return view('admin.reports.lost-id');
+        abort_unless(Auth::guard('web')->check(), 403, 'Unauthorized');
     }
 }

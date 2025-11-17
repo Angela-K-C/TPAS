@@ -2,12 +2,11 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\SecurityAuthController;
+use App\Http\Controllers\SecurityVerificationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TemporaryPassController;
-use App\Models\Guest;
 use App\Models\TemporaryPass;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,15 +15,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Root redirects to login choice
 Route::get('/', fn () => redirect()->route('login.choice'));
 
-// Login choice page
 Route::view('/login/choice', 'auth.login-choice')->name('login.choice');
-
-Route::get('/login', function () {
-    return redirect()->route('login.choice');
-})->name('login');
+Route::get('/login', fn () => redirect()->route('login.choice'))->name('login');
 
 /*
 |--------------------------------------------------------------------------
@@ -32,32 +26,24 @@ Route::get('/login', function () {
 |--------------------------------------------------------------------------
 */
 
-// Student login form
-Route::get('/login/student', [StudentController::class, 'showLogin'])->name('student.login.form');
-Route::post('/login/student', [StudentController::class, 'login'])->name('student.login');
+Route::middleware('guest:university')->group(function () {
+    Route::get('/login/student', [StudentController::class, 'showLoginForm'])->name('student.login');
+    Route::post('/login/student', [StudentController::class, 'login'])->name('student.login.submit');
+});
 
-// Protected student routes
 Route::middleware('auth:university')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+    Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
 
-    Route::middleware('auth:university')->group(function () {
-        Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
-    });
-
-    Route::view('/applications/create', 'application.create')->name('application.create');
-    Route::post('/applications', [StudentController::class, 'applyTemporaryPass'])
-        ->name('application.store');
+    Route::get('/applications/create', [StudentController::class, 'showTemporaryPassForm'])->name('application.create');
+    Route::post('/applications', [StudentController::class, 'applyTemporaryPass'])->name('application.store');
 
     Route::get('/applications/{application}', function (TemporaryPass $application) {
         return view('application.show', ['application' => $application]);
     })->name('application.show');
 
-    Route::get('/report/lost-id', function () {
-        return view('report.lost-id');
-    })->name('report.lost.id');
-
-    Route::post('/report/lost-id', [StudentController::class, 'storeLostId'])
-        ->name('report.lost.id.store');
+    Route::get('/report/lost-id', fn () => view('report.lost-id'))->name('report.lost.id');
+    Route::post('/report/lost-id', [StudentController::class, 'storeLostId'])->name('report.lost.id.store');
 
     Route::post('/student/logout', [StudentController::class, 'logout'])->name('student.logout');
 });
@@ -68,66 +54,18 @@ Route::middleware('auth:university')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// Guest login form
-Route::get('/login/guest', function () {
-    return view('auth.guest-login'); // Blade for guest login
-})->name('guest.login');
-
-// Guest profile
-Route::middleware('auth:guest')->group(function () {
-    Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
+Route::middleware('guest:guest')->group(function () {
+    Route::get('/login/guest', [GuestController::class, 'showLogin'])->name('guest.login');
+    Route::post('/login/guest', [GuestController::class, 'login'])->name('guest.login.submit');
 });
 
-// Guest login submission
-Route::post('/login/guest', function (Request $request) {
-    // For testing, log in the first guest
-    $guest = Guest::where('email', $request->email)->first();
-    if ($guest) {
-        Auth::guard('guest')->login($guest);
-    }
-
-    return redirect()->route('guest.dashboard')->with('status', 'Welcome back, Guest.');
-})->name('guest.login.submit');
-
-// Guest protected routes
 Route::middleware('auth:guest')->group(function () {
-
-    // Guest dashboard
-    Route::get('/guest/dashboard', function () {
-        $passes = \App\Models\TemporaryPass::where('passable_type', Guest::class)
-            ->where('passable_id', auth('guest')->id())
-            ->latest()
-            ->get();
-
-        return view('guest.dashboard', compact('passes'));
-    })->name('guest.dashboard');
-
-    // Guest logout
-    Route::post('/guest/logout', function () {
-        Auth::guard('guest')->logout();
-
-        return redirect()->route('guest.login');
-    })->name('guest.logout');
-
-    // Show form to create a guest application
-    Route::get('/guest/applications/create', function () {
-        $guest = auth('guest')->user();
-
-        return view('guest.application-create', compact('guest'));
-    })->name('guest.application.create');
-
-    // Store the guest application
-    Route::post('/guest/applications', [TemporaryPassController::class, 'store'])
-        ->name('guest.application.store');
-
-    // View a specific guest application
-    Route::get('/guest/applications/{application}', function (\App\Models\TemporaryPass $application) {
-        if ($application->passable_id !== auth('guest')->id()) {
-            abort(403, 'Unauthorized');
-        }
-
-        return view('guest.application-show', compact('application'));
-    })->name('guest.application.show');
+    Route::get('/guest/dashboard', [GuestController::class, 'dashboard'])->name('guest.dashboard');
+    Route::post('/guest/logout', [GuestController::class, 'logout'])->name('guest.logout');
+    Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
+    Route::get('/guest/applications/create', [GuestController::class, 'createApplication'])->name('guest.application.create');
+    Route::post('/guest/applications', [GuestController::class, 'storeApplication'])->name('guest.application.store');
+    Route::get('/guest/applications/{application}', [GuestController::class, 'showApplication'])->name('guest.application.show');
 });
 
 /*
@@ -136,18 +74,53 @@ Route::middleware('auth:guest')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// Admin Login
-Route::get('/admin/login', [AdminController::class, 'showLogin'])->name('admin.login');
-Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
-Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
+Route::middleware('guest:web')->group(function () {
+    Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
+});
 
-// Admin routes (protected)
-Route::prefix('admin')->name('admin.')->middleware('auth:admin')->group(function () {
-    Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('applications', [AdminController::class, 'manageApplications'])->name('admin.applications.manage');
-    Route::get('applications/{application}', [AdminController::class, 'reviewApplication'])->name('admin.applications.review');
-    Route::post('applications/{application}/approve', [AdminController::class, 'approveApplication'])->name('admin.applications.approve');
-    Route::post('applications/{application}/reject', [AdminController::class, 'rejectApplication'])->name('admin.applications.reject');
-    Route::get('passes/expired', [AdminController::class, 'expiredPasses'])->name('passes.expired');
-    Route::get('admin/reports/lost-id', [AdminController::class, 'lostIdReports'])->name('admin.reports.lost.id');
+Route::post('/admin/logout', [AdminController::class, 'logout'])
+    ->middleware('auth:web')
+    ->name('admin.logout');
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware('auth:web')
+    ->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/applications/manage', [AdminController::class, 'applicationsManage'])->name('applications.manage');
+        Route::get('/applications/review/{application}', [AdminController::class, 'applicationsReview'])->name('applications.review');
+        Route::get('/passes/expired', [AdminController::class, 'passesExpired'])->name('passes.expired');
+        Route::view('/reports/lost-id', 'admin.reports.lost-id')->name('reports.lost.id');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Shared Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/logout', fn () => redirect()->route('login.choice'))->name('logout');
+
+Route::get('/passes/{temporaryPass}/qr-code', [TemporaryPassController::class, 'qrCodeImage'])->name('passes.qr.image');
+Route::get('/passes/verify/{token}', [TemporaryPassController::class, 'verifyByToken'])->name('passes.qr.verify');
+Route::resource('passes', TemporaryPassController::class);
+
+/*
+|--------------------------------------------------------------------------
+| Security Guard Portal
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('security')->name('security.')->group(function () {
+    Route::middleware('guest:security')->group(function () {
+        Route::get('/login', [SecurityAuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/login', [SecurityAuthController::class, 'login'])->name('login.submit');
+    });
+
+    Route::middleware('auth:security')->group(function () {
+        Route::post('/logout', [SecurityAuthController::class, 'logout'])->name('logout');
+        Route::get('/verify', [SecurityVerificationController::class, 'showPortal'])->name('verify');
+        Route::post('/lookup', [SecurityVerificationController::class, 'lookup'])->name('lookup');
+    });
 });

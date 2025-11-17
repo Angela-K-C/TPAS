@@ -11,12 +11,13 @@
 <body class="h-full font-sans antialiased">
     
     <div id="app" class="flex flex-col min-h-screen">
-        
         <main class="flex-grow">
             @yield('content')
         </main>
         
-        <x-footer />
+        @if (($showFooter ?? true))
+            <x-footer />
+        @endif
         
     </div>
 

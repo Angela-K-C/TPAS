@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
@@ -13,12 +13,22 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('admins')->insert([
-            'name' => 'Super Admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password123'), // password must be hashed
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        Admin::updateOrCreate(
+            ['email' => 'alvin.muriuki@strathmore.edu'],
+            [
+                'name' => 'Alvin Murithi',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        Admin::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        Admin::factory(14)->create();
     }
 }

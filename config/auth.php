@@ -58,6 +58,12 @@ return [
             'driver' => 'session',
             'provider' => 'guests',
         ],
+
+        // Guard for on-site security staff verifying QR codes
+        'security' => [
+            'driver' => 'session',
+            'provider' => 'security_staff',
+        ],
     ],
 
     /*
@@ -94,6 +100,11 @@ return [
         'guests' => [
             'driver' => 'eloquent',
             'model' => App\Models\Guest::class,
+        ],
+
+        'security_staff' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\SecurityStaff::class,
         ],
     ],
 

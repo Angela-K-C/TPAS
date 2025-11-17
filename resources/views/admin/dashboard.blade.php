@@ -6,7 +6,7 @@ user="Admin"
 
     {{-- --- Top Action Buttons --- --}}
     <div class="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 mb-6">
-        <x-button type="primary" href="{{ route('admin.admin.applications.manage') }}" class="flex-1 sm:flex-none">
+        <x-button type="primary" href="{{ route('admin.applications.manage') }}" class="flex-1 sm:flex-none">
             Manage Applications
         </x-button>
 
@@ -14,7 +14,7 @@ user="Admin"
             Expired Passes
         </x-button>
 
-        <x-button type="warning" href="{{ route('admin.admin.reports.lost.id') }}" class="flex-1 sm:flex-none">
+        <x-button type="warning" href="{{ route('admin.reports.lost.id') }}" class="flex-1 sm:flex-none">
             Lost ID Reports
         </x-button>
     </div>
@@ -22,15 +22,15 @@ user="Admin"
     {{-- --- Key Metric Cards (smaller) --- --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @php
-            $metrics = [
-                ['title' => 'Pending Applications', 'count' => '21', 'color' => 'text-iris', 'route' => route('admin.admin.applications.manage', ['status' => 'Pending'])],
-                ['title' => 'Approved Passes', 'count' => '21', 'color' => 'text-green-600', 'route' => route('admin.admin.applications.manage', ['status' => 'Approved'])],
-                ['title' => 'Rejected Applications', 'count' => '5', 'color' => 'text-red-600', 'route' => route('admin.admin.applications.manage', ['status' => 'Rejected'])],
-                ['title' => 'Expired Passes', 'count' => '78', 'color' => 'text-gray-500', 'route' => route('admin.passes.expired')],
+            $cards = [
+                ['title' => 'Pending Applications', 'count' => $metrics['pending'] ?? 0, 'color' => 'text-iris', 'route' => route('admin.applications.manage', ['status' => 'Pending'])],
+                ['title' => 'Approved Passes', 'count' => $metrics['approved'] ?? 0, 'color' => 'text-green-600', 'route' => route('admin.applications.manage', ['status' => 'Approved'])],
+                ['title' => 'Rejected Applications', 'count' => $metrics['rejected'] ?? 0, 'color' => 'text-red-600', 'route' => route('admin.applications.manage', ['status' => 'Rejected'])],
+                ['title' => 'Expired Passes', 'count' => $metrics['expired'] ?? 0, 'color' => 'text-gray-500', 'route' => route('admin.passes.expired')],
             ];
         @endphp
 
-        @foreach ($metrics as $metric)
+        @foreach ($cards as $metric)
             <x-card class="shadow-md hover:shadow-lg transition duration-150 rounded-xl p-4">
                 <div class="flex flex-col space-y-1">
                     <p class="text-2xl sm:text-3xl font-bold {{ $metric['color'] }}">{{ $metric['count'] }}</p>
@@ -56,27 +56,32 @@ user="Admin"
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 text-sm">
-                   
-                    @foreach ($passes as $app)
+                    @forelse ($passes as $app)
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $app->id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">VST-{{ $app->id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->passable_id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">
-                              {{ optional($app->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($app->valid_until)->format('M d, Y') ?: 'N/A' }}
-
-
+                                @if($app->valid_from && $app->valid_until)
+                                    {{ $app->valid_from->format('M d') }} - {{ $app->valid_until->format('M d') }}
+                                @else
+                                    —
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <x-status-badge :status="$app->status" />
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <a href="{{ route('admin.admin.applications.review', ['application' => $app->id]) }}" class="text-iris font-medium hover:underline">
+                                <a href="{{ route('admin.applications.review', ['application' => $app->id]) }}" class="text-iris font-medium hover:underline">
                                     Review
                                 </a>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-slate-500">No recent activity.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

@@ -4,11 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class TemporaryPass extends Model
 {
     /** @use HasFactory<\Database\Factories\TemporaryPassFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::created(function (self $pass) {
+            $pass->ensureQrCodeAssets();
+        });
+    }
 
     public const MEMBER_REASON_LABELS = [
         'lost_id' => 'Lost University ID',
@@ -111,5 +121,54 @@ class TemporaryPass extends Model
     public static function reasonLabels(): array
     {
         return self::MEMBER_REASON_LABELS;
+    }
+
+    /**
+     * Ensure the pass has a QR token and image stored on disk.
+     */
+    public function ensureQrCodeAssets(): void
+    {
+        if (blank($this->qr_code_token)) {
+            $this->forceFill(['qr_code_token' => (string) Str::uuid()])->saveQuietly();
+        }
+
+        if (blank($this->qr_code_path) || ! Storage::disk('public')->exists($this->qr_code_path)) {
+            $this->generateQrCodeImage();
+        }
+    }
+
+    /**
+     * Generate and persist a QR code PNG pointing to the verification endpoint.
+     */
+    public function generateQrCodeImage(): void
+    {
+        if (blank($this->qr_code_token)) {
+            $this->forceFill(['qr_code_token' => (string) Str::uuid()])->saveQuietly();
+        }
+
+        $payload = route('passes.qr.verify', ['token' => $this->qr_code_token]);
+
+        $image = QrCode::format('svg')
+            ->size(600)
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($payload);
+
+        $path = "qr-codes/pass-{$this->id}.svg";
+        Storage::disk('public')->put($path, $image);
+
+        $this->forceFill(['qr_code_path' => $path])->saveQuietly();
+    }
+
+    /**
+     * Public URL for the stored QR code asset.
+     */
+    public function getQrCodeUrlAttribute(): ?string
+    {
+        if (! $this->qr_code_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->qr_code_path);
     }
 }

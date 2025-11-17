@@ -9,44 +9,78 @@ use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-    // Show login form
-    public function showLogin()
+    /**
+     * Show the student login form.
+     */
+    public function showLoginForm()
     {
         if (Auth::guard('university')->check()) {
-            // Student already logged in, redirect
-            // @TODO: Change Redirect Location
-            return redirect()->route('dashboard')->with('info', 'You are already logged in as Student.');
+            return redirect()->route('dashboard')
+                ->with('info', 'You are already logged in as Student.');
         }
 
         return view('auth.student-login');
     }
 
-    // Handle login form submission
+    /**
+     * Handle student login.
+     */
     public function login(Request $request)
     {
-        // Validate input
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        $credentials = $request->only('email', 'password');
-
         if (Auth::guard('university')->attempt($credentials)) {
-            // Login successful
-            // @TODO: Change Redirect Location
-            return redirect()->route('dashboard')
-                ->with('success', 'Welcome back, '.Auth::guard('university')->user()->name);
+            $request->session()->regenerate();
+
+            return redirect()->intended(route('dashboard'))
+                ->with('success', 'Welcome back, ' . Auth::guard('university')->user()->name);
         }
 
-        // Login failed
-        return back()->withErrors(['email' => 'Invalid credentials.']);
+        return back()->withErrors(['email' => 'Invalid credentials.'])->onlyInput('email');
     }
 
-    // Show form for applying temporary pass
+    /**
+     * Log the student out.
+     */
+    public function logout()
+    {
+        Auth::guard('university')->logout();
+        session()->invalidate();
+        session()->regenerateToken();
+
+        return redirect()->route('student.login')->with('status', 'Logged out successfully!');
+    }
+
+    /**
+     * Student dashboard view showing applications and lost ID reports.
+     */
+    public function dashboard()
+    {
+        $student = Auth::guard('university')->user();
+
+        $passes = TemporaryPass::where('passable_type', Student::class)
+            ->where('passable_id', $student->id)
+            ->where('reason', '!=', 'lost_id')
+            ->latest()
+            ->get();
+
+        $lostIds = TemporaryPass::where('passable_type', Student::class)
+            ->where('passable_id', $student->id)
+            ->where('reason', 'lost_id')
+            ->latest()
+            ->get();
+
+        return view('dashboard', compact('passes', 'lostIds'));
+    }
+
+    /**
+     * Show the temporary pass form with current student details.
+     */
     public function showTemporaryPassForm()
     {
-
         $student = Auth::guard('university')->user();
 
         return view('application.create', [
@@ -55,7 +89,9 @@ class StudentController extends Controller
         ]);
     }
 
-    // Handle form submission for temporary pass
+    /**
+     * Apply for a new temporary pass.
+     */
     public function applyTemporaryPass(Request $request)
     {
         $student = Auth::guard('university')->user();
@@ -70,7 +106,7 @@ class StudentController extends Controller
         $pass = new TemporaryPass([
             'visitor_name' => $student->name,
             'email' => $student->email,
-            'national_id' => $student->admission_number, // if you store it like this
+            'national_id' => $student->admission_number,
             'reason' => $request->reason,
             'valid_from' => $request->date_from,
             'valid_until' => $request->date_to,
@@ -82,37 +118,6 @@ class StudentController extends Controller
 
         return redirect()->route('dashboard')
             ->with('success', 'Temporary pass submitted successfully.');
-    }
-
-    // Logout method
-    public function logout()
-    {
-        Auth::guard('university')->logout();
-
-        // @TODO: Change Redirect Location
-        return redirect()->route('login.choice')->with('success', 'Logged out successfully!');
-    }
-
-    // Dashboard method
-    public function dashboard()
-    {
-        $student = Auth::guard('university')->user();
-
-        // Normal temporary passes (excluding lost ID)
-        $passes = TemporaryPass::where('passable_type', Student::class)
-            ->where('passable_id', $student->id)
-            ->where('reason', '!=', 'lost_id')
-            ->latest()
-            ->get();
-
-        // Lost ID reports
-        $lostIds = TemporaryPass::where('passable_type', Student::class)
-            ->where('passable_id', $student->id)
-            ->where('reason', 'lost_id')
-            ->latest()
-            ->get();
-
-        return view('dashboard', compact('passes', 'lostIds'));
     }
 
     /**
@@ -145,17 +150,23 @@ class StudentController extends Controller
             ->with('success', 'Lost ID reported successfully.');
     }
 
+    /**
+     * Show the authenticated student's profile.
+     */
     public function profile()
     {
         $student = Auth::guard('university')->user();
 
         return view('profile', [
             'user' => $student,
-            'type' => 'student', // optional, in case you want conditional UI
+            'type' => 'student',
             'logoutRoute' => route('student.logout'),
         ]);
     }
 
+    /**
+     * Legacy helper used by seeder/tests to create passes.
+     */
     public function applyPass(Request $request, $studentId)
     {
         $request->validate([

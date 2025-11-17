@@ -17,7 +17,7 @@
                    class="text-sm font-medium text-slate-600 hover:text-iris transition-colors">
                     Dashboard
                 </a>
-                <a href="{{ route('admin.admin.applications.manage') }}"
+                <a href="{{ route('admin.applications.manage') }}"
                    class="text-sm font-medium text-slate-600 hover:text-iris transition-colors">
                     Review Applications
                 </a>
