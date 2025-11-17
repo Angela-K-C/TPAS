@@ -31,6 +31,12 @@
     {{-- --- Applications Table --- --}}
     <x-card header="Applications List ({{ $currentFilter }})">
         <div class="overflow-x-auto">
+            @if (session('success'))
+                <div class="mb-4 rounded-2xl border border-mint bg-mint/10 px-4 py-3 text-sm text-green-700">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

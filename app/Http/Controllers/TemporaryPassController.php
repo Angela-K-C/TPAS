@@ -124,6 +124,7 @@ class TemporaryPassController extends Controller
         $user = $temporaryPass->passable;
         $username = $user->name;
         $recipient = $user->email;
+        $redirectRoute = route('admin.applications.review', ['application' => $temporaryPass->id]);
 
         // If rejected, send email & exit
         if ($request->input('status') === "rejected") {
@@ -133,7 +134,7 @@ class TemporaryPassController extends Controller
                 ->send(new WelcomeMail($username, $status, null));
 
             // Redirect to appropriate route
-            return redirect()->route('passes.index')->with('success', 'Pass rejected, email sent!');
+            return redirect($redirectRoute)->with('success', 'Pass rejected, email sent!');
         }
 
         // If approved
@@ -144,7 +145,7 @@ class TemporaryPassController extends Controller
 
             // Set validity period based on reason
             $now = now();
-            switch($temporaryPass->reason_label) {
+            switch($temporaryPass->reason) {
 
                 // Lost ID - 1 week
                 case 'lost_id':
@@ -185,9 +186,9 @@ class TemporaryPassController extends Controller
         }
 
         $temporaryPass->save();
-    
+
         // Redirect to appropriate route
-        return redirect()->route('passes.index')->with('success', 'Successfully updated, email sent to user!');
+        return redirect($redirectRoute)->with('success', 'Application updated. Email sent to the applicant.');
     }
 
     /**
@@ -203,7 +204,7 @@ class TemporaryPassController extends Controller
         $temporaryPass->delete();
 
         // Redirect to appropriate route
-        return redirect()->route('passes.index')->with('success', 'Successfully deleted!');
+        return redirect()->route('admin.applications.manage')->with('success', 'Application removed successfully.');
     }
 
     /**

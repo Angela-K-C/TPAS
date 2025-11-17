@@ -24,6 +24,11 @@
             </label>
             <x-button type="primary" class="w-full mt-2">Login</x-button>
         </form>
+        <p class="text-center text-sm">
+            <a href="{{ route('login.choice') }}" class="font-medium text-iris hover:text-deep-slate">
+                ← Back to Login Choice
+            </a>
+        </p>
     </div>
 </div>
 @endsection

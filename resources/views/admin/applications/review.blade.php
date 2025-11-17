@@ -9,6 +9,12 @@
 <x-dashboard-layout title="Application Review #{{ $application->id }}" user="Admin">
 
     <div class="max-w-6xl mx-auto space-y-6">
+        @if (session('success'))
+            <div class="rounded-2xl border border-mint bg-mint/10 px-4 py-3 text-sm text-green-700">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <div class="flex items-center justify-between pb-4 border-b border-stroke">
             <a href="{{ route('admin.applications.manage') }}" class="text-sm font-semibold text-slate-500 hover:text-iris flex items-center space-x-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -75,20 +81,24 @@
                 @if($application->status === 'pending')
                     <x-card header="Decision Panel">
                         <p class="text-sm text-slate-500 mb-4">Set the final status for this temporary pass.</p>
-                        <form action="{{ route('passes.update', $application) }}" method="POST" class="space-y-4">
-                            @csrf
-                            @method('PUT')
-                            <div class="flex flex-col gap-3">
-                                <input type="hidden" name="status" id="decision-status" value="">
-                                <x-button type="primary" class="w-full" onclick="event.preventDefault(); document.getElementById('decision-status').value='approved'; this.closest('form').submit();">
+                        <div class="flex flex-col gap-3">
+                            <form action="{{ route('passes.update', $application) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="status" value="approved">
+                                <x-button type="primary" class="w-full">
                                     Approve Application
                                 </x-button>
-                                <x-button type="secondary" class="w-full border border-red-500 text-red-600 hover:bg-red-50"
-                                          onclick="event.preventDefault(); document.getElementById('decision-status').value='rejected'; this.closest('form').submit();">
+                            </form>
+                            <form action="{{ route('passes.update', $application) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="status" value="rejected">
+                                <x-button type="secondary" class="w-full border border-red-500 text-red-600 hover:bg-red-50">
                                     Reject Application
                                 </x-button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </x-card>
                 @else
                     <x-card header="Current Pass Status">

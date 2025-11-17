@@ -10,20 +10,18 @@
         </h2>
         <form class="space-y-6" action="{{ route('guest.login.submit') }}" method="POST">
             @csrf
-            
-            {{-- Email --}}
-            <x-input-field id="email" label="Email" type="email" name="email" />
+            @if ($errors->any())
+                <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
-            {{-- Password --}}
-            <x-input-field id="password" label="Password" type="password" name="password" />
+            {{-- Email --}}
+            <x-input-field id="email" label="Email" type="email" name="email" helper="Enter the email you used when submitting your application." />
 
             <div class="space-y-3 pt-2">
                 <x-button type="primary" class="w-full">
                     Login
-                </x-button>
-                
-                <x-button type="secondary" class="w-full">
-                    Continue with Google
                 </x-button>
             </div>
         </form>

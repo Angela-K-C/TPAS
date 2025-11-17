@@ -17,7 +17,7 @@ class GuestController extends Controller
             return redirect()->route('guest.dashboard')->with('info', 'You are already logged in as Guest.');
         }
 
-        return view('test.guest');
+        return view('auth.guest-login');
     }
 
     // Login with only email (for guests)
@@ -67,7 +67,7 @@ class GuestController extends Controller
             'valid_until' => 'required|date|after_or_equal:valid_from',
             'national_id' => 'nullable|string',
             'host_name' => 'nullable|string',
-            'mentoring_department' => 'nullable|string',
+            'host_department' => 'nullable|string',
             'reason' => 'nullable|string',
         ]);
 
@@ -78,9 +78,9 @@ class GuestController extends Controller
             'valid_until' => $request->valid_until,
             'national_id' => $request->national_id,
             'host_name' => $request->host_name,
-            'mentoring_department' => $request->mentoring_department,
+            'host_department' => $request->host_department,
             'reason' => $request->reason,
-            'status' => 'Pending',
+            'status' => 'pending',
         ]);
 
         return redirect()->back()->with('success', 'Pass application submitted successfully!');
@@ -109,7 +109,10 @@ class GuestController extends Controller
         $guest = Auth::guard('guest')->user();
 
         $request->validate([
+            'visitor_name' => 'nullable|string',
             'national_id' => 'nullable|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string',
             'host_name' => 'nullable|string',
             'host_department' => 'nullable|string',
             'purpose' => 'nullable|string',
@@ -120,13 +123,16 @@ class GuestController extends Controller
         TemporaryPass::create([
             'passable_type' => 'App\Models\Guest',
             'passable_id' => $guest->id,
+            'visitor_name' => $request->visitor_name ?? $guest->name,
             'national_id' => $request->national_id,
+            'email' => $request->email ?? $guest->email,
+            'phone' => $request->phone ?? $guest->phone,
             'host_name' => $request->host_name,
             'host_department' => $request->host_department,
             'purpose' => $request->purpose,
             'valid_from' => $request->visit_start,
             'valid_until' => $request->visit_end,
-            'status' => 'Pending',
+            'status' => 'pending',
         ]);
 
         return redirect()->route('guest.dashboard')->with('success', 'Pass application submitted!');

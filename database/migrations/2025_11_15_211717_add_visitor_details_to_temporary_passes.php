@@ -11,16 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('temporary_passes', function (Blueprint $table) {
-            if (!Schema::hasColumn('temporary_passes', 'host_name')) {
+        $schema = Schema::connection(config('database.default'));
+
+        if (! $schema->hasTable('temporary_passes')) {
+            return;
+        }
+
+        $schema->table('temporary_passes', function (Blueprint $table) use ($schema) {
+            if (! $schema->hasColumn('temporary_passes', 'host_name')) {
                 $table->string('host_name')->nullable()->after('reason');
             }
 
-            if (!Schema::hasColumn('temporary_passes', 'host_department')) {
+            if (! $schema->hasColumn('temporary_passes', 'host_department')) {
                 $table->string('host_department')->nullable()->after('host_name');
             }
 
-            if (!Schema::hasColumn('temporary_passes', 'purpose')) {
+            if (! $schema->hasColumn('temporary_passes', 'purpose')) {
                 $table->text('purpose')->nullable()->after('host_department');
             }
         });
@@ -31,16 +37,22 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('temporary_passes', function (Blueprint $table) {
-            if (Schema::hasColumn('temporary_passes', 'host_name')) {
+        $schema = Schema::connection(config('database.default'));
+
+        if (! $schema->hasTable('temporary_passes')) {
+            return;
+        }
+
+        $schema->table('temporary_passes', function (Blueprint $table) use ($schema) {
+            if ($schema->hasColumn('temporary_passes', 'host_name')) {
                 $table->dropColumn('host_name');
             }
 
-            if (Schema::hasColumn('temporary_passes', 'host_department')) {
+            if ($schema->hasColumn('temporary_passes', 'host_department')) {
                 $table->dropColumn('host_department');
             }
 
-            if (Schema::hasColumn('temporary_passes', 'purpose')) {
+            if ($schema->hasColumn('temporary_passes', 'purpose')) {
                 $table->dropColumn('purpose');
             }
         });

@@ -29,6 +29,14 @@ class AdminSeeder extends Seeder
             ]
         );
 
+        Admin::updateOrCreate(
+            ['email' => 'admin@tpas.com'],
+            [
+                'name' => 'TPAS Admin',
+                'password' => Hash::make('password'),
+            ]
+        );
+
         Admin::factory(14)->create();
     }
 }

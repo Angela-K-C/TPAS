@@ -179,7 +179,7 @@ class StudentController extends Controller
         $student->passes()->create([
             'valid_from' => $request->valid_from,
             'valid_until' => $request->valid_until,
-            'status' => 'Pending',
+            'status' => 'pending',
         ]);
 
         return redirect()->back()->with('success', 'Pass application submitted successfully!');

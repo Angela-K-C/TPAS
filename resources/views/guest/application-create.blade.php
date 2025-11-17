@@ -25,10 +25,10 @@
             {{-- Visitor Details --}}
             <x-card header="1. Visitor Details">
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <x-input-field id="visitor_name" label="Visitor Name" type="text" value="{{ $guest->name ?? '' }}"  helper="Exactly as it appears on the identification card." />
-                    <x-input-field id="national_id" label="National ID Number" type="text"  value="{{ $guest->national_id ?? '' }}"  helper="Digits only · e.g. 12345678" />
-                    <x-input-field id="email" label="Email Address" type="email"  value="{{ $guest->email ?? '' }}" helper="We send your QR pass and updates here." />
-                    <x-input-field id="phone" label="Phone Number" type="tel"  value="{{ $guest->phone ?? '' }}"  helper="Optional but helps our guards reach you if needed." />
+                    <x-input-field id="visitor_name" name="visitor_name" label="Visitor Name" type="text" value="{{ $guest->name ?? '' }}"  helper="Exactly as it appears on the identification card." />
+                    <x-input-field id="national_id" name="national_id" label="National ID Number" type="text"  value="{{ $guest->national_id ?? '' }}"  helper="Digits only · e.g. 12345678" />
+                    <x-input-field id="email" name="email" label="Email Address" type="email"  value="{{ $guest->email ?? '' }}" helper="We send your QR pass and updates here." />
+                    <x-input-field id="phone" name="phone" label="Phone Number" type="tel"  value="{{ $guest->phone ?? '' }}"  helper="Optional but helps our guards reach you if needed." />
                     
                 </div>
             </x-card>
