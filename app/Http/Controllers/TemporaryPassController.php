@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Mail\WelcomeMail;
-use App\Models\Guest;
-use App\Models\Student;
 use App\Models\TemporaryPass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +17,10 @@ class TemporaryPassController extends Controller
      */
     public function create()
     {
+        if (! Auth::guard('university')->check() && ! Auth::guard('guest')->check()) {
+            abort(403, 'Unauthorized');
+        }
+
         return view('test.passes.create');
     }
 
@@ -65,19 +67,51 @@ class TemporaryPassController extends Controller
 
 
         $request->validate([
-            'reason' => 'required|string|max:255',
+            'reason' => 'required|string|max:500',
+            'pass_type' => 'nullable|string|max:255',
+            'visitor_name' => 'nullable|string|max:255',
+            'national_id' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:255',
+            'host_name' => 'nullable|string|max:255',
+            'host_department' => 'nullable|string|max:255',
+            'purpose' => 'nullable|string',
+            'details' => 'nullable|string',
+            'valid_from' => 'nullable|date',
+            'valid_until' => 'nullable|date|after_or_equal:valid_from',
         ]);
-        
+
         $pass = new TemporaryPass();
-        $pass->reason = $request->input('reason');
-        $pass->status = 'pending'; 
-        
+        $pass->fill($request->only([
+            'reason',
+            'pass_type',
+            'visitor_name',
+            'national_id',
+            'email',
+            'phone',
+            'host_name',
+            'host_department',
+            'purpose',
+            'details',
+            'valid_from',
+            'valid_until',
+        ]));
+        $pass->status = 'pending';
+
         if (Auth::guard('university')->check()) {
-            $pass->passable()->associate(Auth::guard('university')->user());
+            $student = Auth::guard('university')->user();
+            $pass->passable()->associate($student);
+            $pass->visitor_name = $pass->visitor_name ?: $student->name;
+            $pass->email = $pass->email ?: $student->email;
+            $pass->national_id = $pass->national_id ?: $student->admission_number;
         }
 
-        if (Auth::guard('guest')->check()) {
-            $pass->passable()->associate(Auth::guard('guest')->user());
+        elseif (Auth::guard('guest')->check()) {
+            $guest = Auth::guard('guest')->user();
+            $pass->passable()->associate($guest);
+            $pass->visitor_name = $pass->visitor_name ?: $guest->name;
+            $pass->email = $pass->email ?: $guest->email;
+            $pass->phone = $pass->phone ?: $guest->phone;
         }
 
         $pass->save();
@@ -130,8 +164,8 @@ class TemporaryPassController extends Controller
         if ($request->input('status') === "rejected") {
             $status = "rejected";
             // Send email notifying user
-            Mail::to($recipient)
-                ->send(new WelcomeMail($username, $status, null));
+            Mail::to($recipient)->send(new WelcomeMail($username, $status));
+            $this->recordStatusEmail($temporaryPass, $recipient, $status);
 
             // Redirect to appropriate route
             return redirect($redirectRoute)->with('success', 'Pass rejected, email sent!');
@@ -183,6 +217,7 @@ class TemporaryPassController extends Controller
 
             // Send email with QR code
             Mail::to($recipient)->send(new WelcomeMail($username, $status));
+            $this->recordStatusEmail($temporaryPass, $recipient, $status);
         }
 
         $temporaryPass->save();
@@ -255,6 +290,15 @@ class TemporaryPassController extends Controller
             'valid_until' => optional($pass->valid_until)?->toIso8601String(),
             'qr_token' => $pass->qr_code_token,
         ]);
+    }
+
+    /**
+     * Persist an email log entry after notifying the applicant.
+     */
+    private function recordStatusEmail(TemporaryPass $temporaryPass, string $recipient, string $status): void
+    {
+        $subject = "Temporary Pass Application {$status}";
+        $temporaryPass->logEmail($recipient, $subject, 'sent');
     }
 
     /**

@@ -107,6 +107,7 @@ class StudentController extends Controller
             'visitor_name' => $student->name,
             'email' => $student->email,
             'national_id' => $student->admission_number,
+            'pass_type' => $request->pass_type,
             'reason' => $request->reason,
             'valid_from' => $request->date_from,
             'valid_until' => $request->date_to,
