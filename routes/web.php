@@ -102,11 +102,18 @@ Route::prefix('admin')
 
 Route::post('/logout', fn () => redirect()->route('login.choice'))->name('logout');
 
+Route::get('/passes', [TemporaryPassController::class, 'index'])->name('passes.index');
+Route::get('/passes/create', [TemporaryPassController::class, 'create'])->name('passes.create');
+Route::post('/passes', [TemporaryPassController::class, 'store'])->name('passes.store');
+Route::get('/passes/{temporaryPass}', [TemporaryPassController::class, 'show'])->name('passes.show');
 Route::get('/passes/{temporaryPass}/qr-code', [TemporaryPassController::class, 'qrCodeImage'])->name('passes.qr.image');
 Route::get('/passes/verify/{token}', [TemporaryPassController::class, 'verifyByToken'])->name('passes.qr.verify');
 Route::put('/passes/{temporaryPass}', [TemporaryPassController::class, 'update'])
     ->middleware('auth:web')
     ->name('passes.update');
+Route::delete('/passes/{temporaryPass}', [TemporaryPassController::class, 'destroy'])
+    ->middleware('auth:web')
+    ->name('passes.destroy');
 
 /*
 |--------------------------------------------------------------------------
