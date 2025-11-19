@@ -21,7 +21,19 @@ class TemporaryPassController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return view('test.passes.create');
+        [
+            'userLabel' => $userLabel,
+            'logoutRoute' => $logoutRoute,
+        ] = $this->resolveLayoutContext();
+
+        $applicant = Auth::guard('university')->user() ?? Auth::guard('guest')->user();
+
+        return view('passes.create', [
+            'reasonLabels' => TemporaryPass::reasonLabels(),
+            'userLabel' => $userLabel,
+            'logoutRoute' => $logoutRoute,
+            'applicant' => $applicant,
+        ]);
     }
 
     /**
@@ -53,7 +65,21 @@ class TemporaryPassController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return view('test.passes.index', compact('passes'));
+        [
+            'userLabel' => $userLabel,
+            'logoutRoute' => $logoutRoute,
+        ] = $this->resolveLayoutContext();
+
+        $canApply = Auth::guard('university')->check() || Auth::guard('guest')->check();
+        $isAdmin = Auth::guard('web')->check();
+
+        return view('passes.index', [
+            'passes' => $passes,
+            'userLabel' => $userLabel,
+            'logoutRoute' => $logoutRoute,
+            'canApply' => $canApply,
+            'isAdmin' => $isAdmin,
+        ]);
     }
 
     /**
@@ -129,8 +155,18 @@ class TemporaryPassController extends Controller
         $temporaryPass->load('passable', 'approver');
         $temporaryPass->ensureQrCodeAssets();
 
-        return view('test.passes.show', [
+        [
+            'userLabel' => $userLabel,
+            'logoutRoute' => $logoutRoute,
+        ] = $this->resolveLayoutContext();
+
+        $isAdmin = Auth::guard('web')->check();
+
+        return view('passes.show', [
             'pass' => $temporaryPass,
+            'userLabel' => $userLabel,
+            'logoutRoute' => $logoutRoute,
+            'isAdmin' => $isAdmin,
         ]);
     }
 
@@ -329,5 +365,45 @@ class TemporaryPassController extends Controller
         }
 
         abort(403, 'Unauthorized');
+    }
+
+    /**
+     * Determine the layout labels/routes for the authenticated guard.
+     *
+     * @return array{userLabel: string, logoutRoute: string}
+     */
+    private function resolveLayoutContext(): array
+    {
+        if (Auth::guard('web')->check()) {
+            $admin = Auth::guard('web')->user();
+
+            return [
+                'userLabel' => $admin->name ?? 'Admin',
+                'logoutRoute' => route('admin.logout'),
+            ];
+        }
+
+        if (Auth::guard('university')->check()) {
+            $student = Auth::guard('university')->user();
+
+            return [
+                'userLabel' => $student->name ?? 'Student',
+                'logoutRoute' => route('student.logout'),
+            ];
+        }
+
+        if (Auth::guard('guest')->check()) {
+            $guest = Auth::guard('guest')->user();
+
+            return [
+                'userLabel' => $guest->name ?? 'Guest',
+                'logoutRoute' => route('guest.logout'),
+            ];
+        }
+
+        return [
+            'userLabel' => 'User',
+            'logoutRoute' => route('logout'),
+        ];
     }
 }
