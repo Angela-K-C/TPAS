@@ -59,14 +59,12 @@ Route::middleware('guest:guest')->group(function () {
     Route::post('/login/guest', [GuestController::class, 'login'])->name('guest.login.submit');
 });
 
-Route::middleware('auth:guest')->group(function () {
-    Route::get('/guest/dashboard', [GuestController::class, 'dashboard'])->name('guest.dashboard');
-    Route::post('/guest/logout', [GuestController::class, 'logout'])->name('guest.logout');
-    Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
-    Route::get('/guest/applications/create', [GuestController::class, 'createApplication'])->name('guest.application.create');
-    Route::post('/guest/applications', [GuestController::class, 'storeApplication'])->name('guest.application.store');
-    Route::get('/guest/applications/{application}', [GuestController::class, 'showApplication'])->name('guest.application.show');
-});
+Route::get('/guest/dashboard', [GuestController::class, 'dashboard'])->name('guest.dashboard');
+Route::post('/guest/logout', [GuestController::class, 'logout'])->name('guest.logout');
+Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
+Route::get('/guest/applications/create', [GuestController::class, 'createApplication'])->name('guest.application.create');
+Route::post('/guest/applications', [GuestController::class, 'storeApplication'])->name('guest.application.store');
+Route::get('/guest/applications/{application}', [GuestController::class, 'showApplication'])->name('guest.application.show');
 
 /*
 |--------------------------------------------------------------------------

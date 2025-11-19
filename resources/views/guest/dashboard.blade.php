@@ -23,7 +23,7 @@ user="{{ $guestName }}"
 
         {{-- Application History Table --}}
         <x-card header="My Pass Applications">
-            @if ($passes->isEmpty())
+            @if (empty($passes))
                 <div class="text-center py-12 space-y-4">
                     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-lilac/60 text-iris text-2xl font-hand">
                         

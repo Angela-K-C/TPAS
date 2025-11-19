@@ -24,21 +24,27 @@ class GuestController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:guests,email',
+            'email' => 'required|email',
         ]);
 
-        // Find guest by email
+        // Check if guest exists, else create
         $guest = Guest::where('email', $request->email)->first();
-
-        if ($guest) {
-            // Log them in manually without password
-            Auth::guard('guest')->login($guest);
-            $request->session()->regenerate();
-
-            return redirect()->route('guest.dashboard')->with('success', 'Logged in successfully!');
+        if (!$guest) {
+            $guest = Guest::create([
+                'email' => $request->email,
+                'name' => 'Guest', // or you can use $request->email as name
+            ]);
         }
 
-        return back()->withErrors(['email' => 'Guest not found.']);
+        // Log in the guest
+        Auth::guard('guest')->login($guest);
+        $request->session()->regenerate();
+
+        // Store guest ID and email in session
+        $request->session()->put('guest_id', $guest->id);
+        $request->session()->put('guest_email', $guest->email);
+
+        return redirect()->route('guest.dashboard')->with('success', 'Logged in successfully!');
     }
 
     // Logout method
@@ -89,11 +95,15 @@ class GuestController extends Controller
     public function dashboard()
     {
         $guest = Auth::guard('guest')->user();
+        $email = session('guest_email');
+        $passes = [];
+        if ($guest) {
+            $email = $guest->email;
+            // Get all passes for this guest
+            $passes = $guest->passes()->orderBy('created_at', 'desc')->get();
+        }
 
-        // Get all passes for this guest
-        $passes = $guest->passes()->orderBy('created_at', 'desc')->get();
-
-        return view('guest.dashboard', compact('passes'));
+        return view('guest.dashboard', compact('passes', 'email'));
     }
 
     // Show application creation form
@@ -120,8 +130,12 @@ class GuestController extends Controller
             'visit_end' => 'required|date|after_or_equal:visit_start',
         ]);
 
+        if (!$guest) {
+            return redirect()->route('guest.login')->withErrors(['error' => 'Guest not authenticated. Please log in again.']);
+        }
+
         TemporaryPass::create([
-            'passable_type' => 'App\Models\Guest',
+            'passable_type' => 'App\\Models\\Guest',
             'passable_id' => $guest->id,
             'visitor_name' => $request->visitor_name ?? $guest->name,
             'national_id' => $request->national_id,
@@ -130,6 +144,7 @@ class GuestController extends Controller
             'host_name' => $request->host_name,
             'host_department' => $request->host_department,
             'purpose' => $request->purpose,
+            'reason' => $request->reason ?? 'Strathmore Visit',
             'valid_from' => $request->visit_start,
             'valid_until' => $request->visit_end,
             'status' => 'pending',
