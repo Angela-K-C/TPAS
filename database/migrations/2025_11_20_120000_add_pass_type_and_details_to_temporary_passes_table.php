@@ -17,7 +17,11 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('temporary_passes', 'details')) {
-                $table->text('details')->nullable()->after('purpose');
+                $afterColumn = Schema::hasColumn('temporary_passes', 'purpose')
+                    ? 'purpose'
+                    : 'host_department';
+
+                $table->text('details')->nullable()->after($afterColumn);
             }
         });
     }
