@@ -17,11 +17,11 @@
             @endif
 
             {{-- Email --}}
-            <x-input-field id="email" label="Email" type="email" name="email" helper="Enter the email you used when submitting your application." />
+            <x-input-field id="email" label="Email" type="email" name="email" helper="Enter the email you will use when submitting your application." />
 
             <div class="space-y-3 pt-2">
                 <x-button type="primary" class="w-full">
-                    Login
+                    Enter Email
                 </x-button>
             </div>
         </form>
