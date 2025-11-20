@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Auth;
 class AdminController extends Controller
 {
     /**
+     * Show reported lost IDs from students.
+     */
+    public function reportsLostId()
+    {
+        $this->ensureAdmin();
+
+        $reports = TemporaryPass::with('passable')
+            ->where('reason', 'lost_id')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('admin.reports.lost-id', [
+            'reports' => $reports,
+        ]);
+    }
+    /**
      * Show the admin login screen.
      */
     public function showLoginForm()

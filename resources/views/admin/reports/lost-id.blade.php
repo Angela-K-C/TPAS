@@ -34,24 +34,20 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 text-sm">
-                    @php
-                        // Mock data reflecting the read-only reports
-                        $lostReports = [
-                            (object)['id' => 1, 'student' => 'R. Richards (4600)', 'report_date' => 'Today, 10:30 AM', 'lost_date' => 'Oct 25, 2025', 'location' => 'Library, 3rd Floor East Wing', 'status' => 'Pending Replacement'],
-                            (object)['id' => 2, 'student' => 'S. Chen (1234)', 'report_date' => 'Yesterday, 3:15 PM', 'lost_date' => 'Oct 24, 2025', 'location' => 'Bus Stop A, Main Entrance', 'status' => 'Replacement Issued'],
-                            (object)['id' => 3, 'student' => 'T. Lee (7890)', 'report_date' => '2 days ago', 'lost_date' => 'Oct 23, 2025', 'location' => 'Dormitory C, Room 105', 'status' => 'Deactivated'],
-                        ];
-                    @endphp
-
-                    @foreach ($lostReports as $report)
+                    @forelse ($reports as $report)
                         <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $report->report_date }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $report->student }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $report->lost_date }}</td>
-                            <td class="px-6 py-4 text-slate-700">{{ $report->location }}</td>
-                            <!-- Removed Status cell -->
+                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $report->created_at->format('M d, Y H:i') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-slate-700">
+                                {{ $report->visitor_name }} ({{ $report->national_id }})
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $report->valid_from->format('M d, Y') }}</td>
+                            <td class="px-6 py-4 text-slate-700">{{ $report->details }}</td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-slate-500">No lost ID reports found.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

@@ -89,7 +89,7 @@ Route::prefix('admin')
         Route::get('/applications/manage', [AdminController::class, 'applicationsManage'])->name('applications.manage');
         Route::get('/applications/review/{application}', [AdminController::class, 'applicationsReview'])->name('applications.review');
         Route::get('/passes/expired', [AdminController::class, 'passesExpired'])->name('passes.expired');
-        Route::view('/reports/lost-id', 'admin.reports.lost-id')->name('reports.lost.id');
+        Route::get('/reports/lost-id', [AdminController::class, 'reportsLostId'])->name('reports.lost.id');
     });
 
 /*
