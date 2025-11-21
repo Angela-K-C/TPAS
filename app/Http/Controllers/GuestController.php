@@ -134,6 +134,15 @@ class GuestController extends Controller
             return redirect()->route('guest.login')->withErrors(['error' => 'Guest not authenticated. Please log in again.']);
         }
 
+        $existingPass = TemporaryPass::existingNonRejectedFor($guest);
+        if ($existingPass) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'application' => 'You already have an application (#' . $existingPass->id . ') with status "' . $existingPass->status . '". Wait until it expires before applying again.',
+                ]);
+        }
+
         TemporaryPass::create([
             'passable_type' => 'App\\Models\\Guest',
             'passable_id' => $guest->id,

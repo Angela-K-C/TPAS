@@ -13,6 +13,16 @@
                 <p class="text-sm text-deep-slate">{{ session('status') }}</p>
             </div>
         @endif
+        @if ($errors->any())
+            <div class="wire-card border-l-4 border-red-500 bg-red-50 p-5 space-y-2">
+                <p class="text-sm font-semibold text-red-700">Please fix the following issues:</p>
+                <ul class="text-sm text-red-600 list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         
         {{-- Form action  --}}
         <form action="{{ route('application.store') }}" method="POST" class="space-y-8">

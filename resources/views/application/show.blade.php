@@ -6,7 +6,7 @@
 
         {{-- Top Header Row --}}
         <div class="flex items-center justify-between pb-4 border-b border-stroke">
-            <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:text-white flex items-center space-x-2">
+            <a href="{{ route('dashboard') }}" class="text-sm font-semibold text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-900 flex items-center space-x-2">
                 <span class="wire-icon-button w-8 h-8"> ← </span>
                 <span>Back to Dashboard</span>
             </a>
@@ -18,7 +18,7 @@
             @endif
         </div>
 
-        <h2 class="text-4xl font-hand text-slate-900 dark:text-white flex items-center gap-4">
+        <h2 class="text-4xl font-hand text-slate-900 flex items-center gap-4">
             Application #TPAS-{{ $application->id }}
             <x-status-badge :status="$application->status" class="ml-4 text-base" />
         </h2>
@@ -32,31 +32,31 @@
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 text-base">
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Pass Owner</dt>
-                            <dd class="mt-1 font-semibold text-slate-900 dark:text-white">
+                            <dd class="mt-1 font-semibold text-slate-900">
                                 {{ class_basename($application->passable_type) }} #{{ $application->passable_id }}
                             </dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Application ID</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">TPAS-{{ $application->id }}</dd>
+                            <dd class="mt-1 text-slate-900">TPAS-{{ $application->id }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Pass Type</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $application->type ?? 'Temporary Pass' }}</dd>
+                            <dd class="mt-1 text-slate-900">{{ $application->type ?? 'Temporary Pass' }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Duration</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">
+                            <dd class="mt-1 text-slate-900">
                                 {{ $application->valid_from->format('Y-m-d') }} to {{ $application->valid_until->format('Y-m-d') }}
                             </dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Date Applied</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $application->created_at->format('M d, Y') }}</dd>
+                            <dd class="mt-1 text-slate-900">{{ $application->created_at->format('M d, Y') }}</dd>
                         </div>
                         <div>
                             <dt class="text-slate-500 dark:text-slate-300">Approval Date</dt>
-                            <dd class="mt-1 text-slate-900 dark:text-white">{{ $application->updated_at->format('M d, Y') }}</dd>
+                            <dd class="mt-1 text-slate-900">{{ $application->updated_at->format('M d, Y') }}</dd>
                         </div>
                     </dl>
                 </x-card>
@@ -66,12 +66,45 @@
                 </x-card>
 
                 @php
+                    $isApproved = $application->status === 'approved';
+                    $isRejected = $application->status === 'rejected';
+                    $isPending = $application->status === 'pending';
+                    $isExpired = $application->valid_until && $application->valid_until->isPast();
+
                     $timeline = [
-                        ['label' => 'Submitted', 'date' => $application->created_at->format('M d, Y'), 'status' => 'completed'],
-                        ['label' => 'Reviewed by Admin', 'date' => $application->updated_at->format('M d, Y'), 'status' => 'completed'],
-                        ['label' => 'Pass Generated', 'date' => $application->valid_from->format('M d, Y'), 'status' => 'current'],
-                        ['label' => 'Archived', 'date' => '—', 'status' => 'upcoming'],
+                        [
+                            'label' => 'Submitted',
+                            'date' => optional($application->created_at)?->format('M d, Y') ?? '—',
+                            'status' => 'completed',
+                        ],
+                        [
+                            'label' => 'Reviewed by Admin',
+                            'date' => $isPending ? '—' : (optional($application->updated_at)?->format('M d, Y') ?? '—'),
+                            'status' => $isPending ? 'current' : 'completed',
+                        ],
                     ];
+
+                    if ($isRejected) {
+                        $timeline[] = [
+                            'label' => 'Rejected',
+                            'date' => optional($application->updated_at)?->format('M d, Y') ?? '—',
+                            'status' => 'completed',
+                        ];
+                    } else {
+                        $timeline[] = [
+                            'label' => 'Pass Generated',
+                            'date' => optional($application->valid_from)?->format('M d, Y') ?? '—',
+                            'status' => $isApproved ? ($isExpired ? 'completed' : 'current') : 'upcoming',
+                        ];
+
+                        if ($application->valid_until) {
+                            $timeline[] = [
+                                'label' => $isExpired ? 'Expired' : 'Archived',
+                                'date' => optional($application->valid_until)?->format('M d, Y') ?? '—',
+                                'status' => $isExpired ? 'completed' : ($isApproved ? 'upcoming' : 'upcoming'),
+                            ];
+                        }
+                    }
                 @endphp
 
                 <x-card header="Timeline">
