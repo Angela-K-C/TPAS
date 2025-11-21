@@ -123,7 +123,7 @@ class StudentController extends Controller
             $rejectedPass->ensureQrCodeAssets();
 
             if ($student->email) {
-                Mail::to($student->email)->send(new WelcomeMail($student->name, 'rejected'));
+                Mail::to($student->email)->send(new WelcomeMail($student->name, 'rejected', $rejectedPass));
                 $rejectedPass->logEmail($student->email, 'Temporary Pass Application rejected', 'sent');
             }
 
@@ -149,7 +149,7 @@ class StudentController extends Controller
         $pass->save();
 
         if ($student->email) {
-            Mail::to($student->email)->send(new WelcomeMail($student->name, 'approved'));
+            Mail::to($student->email)->send(new WelcomeMail($student->name, 'approved', $pass));
             $pass->logEmail($student->email, 'Temporary Pass Application approved', 'sent');
         }
 
@@ -220,7 +220,7 @@ class StudentController extends Controller
         ]);
 
         if ($student->email) {
-            Mail::to($student->email)->send(new WelcomeMail($student->name, 'approved'));
+            Mail::to($student->email)->send(new WelcomeMail($student->name, 'approved', $createdPass));
             $createdPass->logEmail($student->email, 'Temporary Pass Application approved', 'sent');
         }
 

@@ -105,6 +105,7 @@ Route::get('/passes/create', [TemporaryPassController::class, 'create'])->name('
 Route::post('/passes', [TemporaryPassController::class, 'store'])->name('passes.store');
 Route::get('/passes/{temporaryPass}', [TemporaryPassController::class, 'show'])->name('passes.show');
 Route::get('/passes/{temporaryPass}/qr-code', [TemporaryPassController::class, 'qrCodeImage'])->name('passes.qr.image');
+Route::get('/passes/{temporaryPass}/qr-code.pdf', [TemporaryPassController::class, 'qrCodePdf'])->name('passes.qr.pdf');
 Route::get('/passes/verify/{token}', [TemporaryPassController::class, 'verifyByToken'])->name('passes.qr.verify');
 Route::put('/passes/{temporaryPass}', [TemporaryPassController::class, 'update'])
     ->middleware('auth:web')

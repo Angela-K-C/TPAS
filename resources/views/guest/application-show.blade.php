@@ -8,8 +8,10 @@
                 <span>Back to Dashboard</span>
             </a>
 
-            @if(strtolower($application->status) === 'active')
-                <x-button type="primary" href="#">Download Visitor's Pass</x-button>
+            @if($application->status === 'approved' && $application->qr_code_token)
+                <x-button type="primary" href="{{ route('passes.qr.pdf', $application) }}">
+                    Download Visitor's Pass
+                </x-button>
             @endif
         </div>
 
@@ -86,9 +88,33 @@
             <div class="lg:col-span-1">
                 <x-card header="Pass Validation Code" class="h-full">
                     <div class="flex flex-col items-center justify-center space-y-4">
-                        <div class="w-full aspect-square border-2 border-dashed border-stroke rounded-2xl flex items-center justify-center text-slate-400">
-                            QR Placeholder
-                        </div>
+                        @if($application->status === 'approved' && $application->qr_code_token)
+                            <img
+                                src="{{ route('passes.qr.image', $application) }}"
+                                alt="Pass QR code"
+                                class="w-full max-w-xs aspect-square bg-white p-4 rounded-2xl shadow"
+                            >
+                            <p class="text-center text-xs font-mono text-slate-500">
+                                Token: {{ strtoupper(substr($application->qr_code_token, 0, 8)) }}
+                            </p>
+                            <a
+                                href="{{ route('passes.qr.image', $application) }}"
+                                target="_blank"
+                                class="text-sm font-semibold text-iris hover:text-deep-slate transition"
+                            >
+                                Open QR in new tab
+                            </a>
+                            <a
+                                href="{{ route('passes.qr.pdf', $application) }}"
+                                class="text-sm font-semibold text-iris hover:text-deep-slate transition"
+                            >
+                                Download QR as PDF
+                            </a>
+                        @else
+                            <div class="w-full aspect-square border-2 border-dashed border-stroke rounded-2xl flex items-center justify-center text-slate-400 text-center px-4">
+                                QR code will appear here once your pass is approved.
+                            </div>
+                        @endif
                         <p class="text-center text-sm font-medium text-slate-500">Scan for Validation</p>
                     </div>
                 </x-card>
