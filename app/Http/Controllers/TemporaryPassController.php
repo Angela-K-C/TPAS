@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\WelcomeMail;
 use App\Models\TemporaryPass;
 use Illuminate\Http\Request;
@@ -130,7 +131,7 @@ class TemporaryPassController extends Controller
                 $pass->ensureQrCodeAssets();
 
                 if ($pass->email) {
-                    Mail::to($pass->email)->send(new WelcomeMail($pass->visitor_name ?? $student->name, 'rejected'));
+                    Mail::to($pass->email)->send(new WelcomeMail($pass->visitor_name ?? $student->name, 'rejected', $pass));
                     $this->recordStatusEmail($pass, $pass->email, 'rejected');
                 }
 
@@ -167,7 +168,7 @@ class TemporaryPassController extends Controller
         if ($pass->status === 'approved' && $pass->email) {
             $recipient = $pass->email;
             $username = $pass->visitor_name ?? $applicant->name ?? 'User';
-            Mail::to($recipient)->send(new WelcomeMail($username, 'approved'));
+            Mail::to($recipient)->send(new WelcomeMail($username, 'approved', $pass));
             $this->recordStatusEmail($pass, $recipient, 'approved');
         }
 
@@ -228,7 +229,7 @@ class TemporaryPassController extends Controller
         if ($request->input('status') === "rejected") {
             $status = "rejected";
             // Send email notifying user
-            Mail::to($recipient)->send(new WelcomeMail($username, $status));
+            Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
             $this->recordStatusEmail($temporaryPass, $recipient, $status);
 
             // Redirect to appropriate route
@@ -280,7 +281,7 @@ class TemporaryPassController extends Controller
             $temporaryPass->qr_code_token = (String) Str::uuid();
 
             // Send email with QR code
-            Mail::to($recipient)->send(new WelcomeMail($username, $status));
+            Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
             $this->recordStatusEmail($temporaryPass, $recipient, $status);
         }
 
@@ -331,6 +332,31 @@ class TemporaryPassController extends Controller
                 'Cache-Control' => 'public, max-age=604800',
             ]
         );
+    }
+
+    /**
+     * Download the QR code as a PDF file.
+     */
+    public function qrCodePdf(TemporaryPass $temporaryPass)
+    {
+        $this->assertViewerCanAccess($temporaryPass);
+        $temporaryPass->ensureQrCodeAssets();
+
+        if (! $temporaryPass->qr_code_path || ! Storage::disk('public')->exists($temporaryPass->qr_code_path)) {
+            abort(404, 'QR code unavailable.');
+        }
+
+        $svg = Storage::disk('public')->get($temporaryPass->qr_code_path);
+        $qrDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $reference = strtoupper(substr($temporaryPass->qr_code_token ?? (string) $temporaryPass->id, 0, 8));
+
+        $pdf = Pdf::loadView('passes.qr-pdf', [
+            'pass' => $temporaryPass,
+            'qrDataUri' => $qrDataUri,
+            'reference' => $reference,
+        ]);
+
+        return $pdf->download("temporary-pass-{$temporaryPass->id}.pdf");
     }
 
     /**

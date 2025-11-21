@@ -167,6 +167,8 @@ class GuestController extends Controller
     {
         $pass = TemporaryPass::findOrFail($id);
 
-        return view('guest.application-show', compact('pass'));
+        return view('guest.application-show', [
+            'application' => $pass,
+        ]);
     }
 }

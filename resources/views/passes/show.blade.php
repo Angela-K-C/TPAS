@@ -59,9 +59,11 @@
                 </p>
                 <div class="mt-6 flex flex-col items-center gap-4">
                     <img src="{{ route('passes.qr.image', $pass) }}" alt="Temporary pass QR code" class="w-56 h-56 border border-stroke rounded-3xl p-4 bg-white">
-                    <a href="{{ route('passes.qr.image', $pass) }}" download="temporary-pass-{{ $pass->id }}.svg" class="text-iris font-semibold hover:text-deep-slate transition">
-                        Download QR code
-                    </a>
+                    @unless($isAdmin)
+                        <a href="{{ route('passes.qr.pdf', $pass) }}" class="text-iris font-semibold hover:text-deep-slate transition">
+                            Download QR code
+                        </a>
+                    @endunless
                 </div>
             @else
                 <p class="text-sm text-warm-gray">QR code not available for this pass.</p>

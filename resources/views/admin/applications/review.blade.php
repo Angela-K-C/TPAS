@@ -21,11 +21,6 @@
                 <span>Back to Applications</span>
             </a>
 
-            @if($application->status === 'approved')
-                <x-button type="primary" href="{{ route('passes.qr.image', $application) }}" target="_blank">
-                    Download Pass QR
-                </x-button>
-            @endif
         </div>
 
         <h2 class="text-4xl font-hand text-slate-900 flex items-center gap-4">

@@ -2,12 +2,16 @@
 
 namespace App\Mail;
 
+use App\Models\TemporaryPass;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 
 class WelcomeMail extends Mailable
 {
@@ -15,14 +19,16 @@ class WelcomeMail extends Mailable
 
     public $userName;
     public $status;
+    public ?TemporaryPass $temporaryPass;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($userName, $status)
+    public function __construct($userName, $status, ?TemporaryPass $temporaryPass = null)
     {
         $this->userName = $userName;
         $this->status = $status;
+        $this->temporaryPass = $temporaryPass;
     }
 
     /**
@@ -56,6 +62,32 @@ class WelcomeMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        if ($this->status !== 'approved' || ! $this->temporaryPass) {
+            return [];
+        }
+
+        $pass = $this->temporaryPass;
+        $pass->ensureQrCodeAssets();
+
+        if (! $pass->qr_code_path || ! Storage::disk('public')->exists($pass->qr_code_path)) {
+            return [];
+        }
+
+        $svg = Storage::disk('public')->get($pass->qr_code_path);
+        $qrDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $reference = strtoupper(substr($pass->qr_code_token ?? (string) $pass->id, 0, 8));
+
+        $pdf = Pdf::loadView('passes.qr-pdf', [
+            'pass' => $pass,
+            'qrDataUri' => $qrDataUri,
+            'reference' => $reference,
+        ]);
+
+        return [
+            Attachment::fromData(
+                fn () => $pdf->output(),
+                "temporary-pass-{$pass->id}.pdf"
+            )->withMime('application/pdf'),
+        ];
     }
 }
