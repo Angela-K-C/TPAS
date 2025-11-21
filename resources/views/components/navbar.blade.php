@@ -9,8 +9,8 @@
 
             {{-- Left: Logo --}}
             <div class="flex items-center">
-                <a href="{{ route('dashboard') }}" class="text-3xl font-logo text-iris">
-                    T.P.A.S
+                <a href="{{ route('dashboard') }}" class="flex items-center">
+                    <img src="{{ asset('logo.png') }}" alt="TPAS Logo" class="h-16 w-auto object-contain">
                 </a>
             </div>
 
