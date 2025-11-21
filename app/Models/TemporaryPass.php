@@ -133,6 +133,18 @@ class TemporaryPass extends Model
     }
 
     /**
+     * Retrieve the most recent pass for this passable that has not been rejected.
+     */
+    public static function existingNonRejectedFor(Model $passable): ?self
+    {
+        return self::where('passable_type', $passable->getMorphClass())
+            ->where('passable_id', $passable->getKey())
+            ->where('status', '!=', 'rejected')
+            ->latest()
+            ->first();
+    }
+
+    /**
      * Ensure the pass has a QR token and image stored on disk.
      */
     public function ensureQrCodeAssets(): void

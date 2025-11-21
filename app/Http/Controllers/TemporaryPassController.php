@@ -91,8 +91,9 @@ class TemporaryPassController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        $applicant = Auth::guard('university')->user() ?? Auth::guard('guest')->user();
 
-        $request->validate([
+        $validated = $request->validate([
             'reason' => 'required|string|max:500',
             'pass_type' => 'nullable|string|max:255',
             'visitor_name' => 'nullable|string|max:255',
@@ -108,21 +109,11 @@ class TemporaryPassController extends Controller
         ]);
 
         $pass = new TemporaryPass();
-        $pass->fill($request->only([
-            'reason',
-            'pass_type',
-            'visitor_name',
-            'national_id',
-            'email',
-            'phone',
-            'host_name',
-            'host_department',
-            'purpose',
-            'details',
-            'valid_from',
-            'valid_until',
-        ]));
+        $pass->fill($validated);
         $pass->status = 'pending';
+
+        $message = 'Temporary pass application submitted!';
+        $existingPass = TemporaryPass::existingNonRejectedFor($applicant);
 
         if (Auth::guard('university')->check()) {
             $student = Auth::guard('university')->user();
@@ -130,6 +121,28 @@ class TemporaryPassController extends Controller
             $pass->visitor_name = $pass->visitor_name ?: $student->name;
             $pass->email = $pass->email ?: $student->email;
             $pass->national_id = $pass->national_id ?: $student->admission_number;
+
+            if ($existingPass) {
+                $pass->status = 'rejected';
+                $message = 'Your existing application is still active. Apply physically for a temporary pass.';
+
+                $pass->save();
+                $pass->ensureQrCodeAssets();
+
+                if ($pass->email) {
+                    Mail::to($pass->email)->send(new WelcomeMail($pass->visitor_name ?? $student->name, 'rejected'));
+                    $this->recordStatusEmail($pass, $pass->email, 'rejected');
+                }
+
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'application' => 'You already have an application (#' . $existingPass->id . ') with status "' . $existingPass->status . '". Apply physically at the security office for a temporary pass.',
+                    ]);
+            }
+
+            $pass->status = 'approved';
+            $message = 'Temporary pass approved automatically.';
         }
 
         elseif (Auth::guard('guest')->check()) {
@@ -138,12 +151,27 @@ class TemporaryPassController extends Controller
             $pass->visitor_name = $pass->visitor_name ?: $guest->name;
             $pass->email = $pass->email ?: $guest->email;
             $pass->phone = $pass->phone ?: $guest->phone;
+
+            if ($existingPass) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'application' => 'You already have an application (#' . $existingPass->id . ') with status "' . $existingPass->status . '". Wait until it expires or apply physically at the security office.',
+                    ]);
+            }
         }
 
         $pass->save();
         $pass->ensureQrCodeAssets();
 
-        return redirect()->route('passes.index')->with('success', 'Temporary pass application submitted!');
+        if ($pass->status === 'approved' && $pass->email) {
+            $recipient = $pass->email;
+            $username = $pass->visitor_name ?? $applicant->name ?? 'User';
+            Mail::to($recipient)->send(new WelcomeMail($username, 'approved'));
+            $this->recordStatusEmail($pass, $recipient, 'approved');
+        }
+
+        return redirect()->route('passes.index')->with('success', $message);
     }
 
     /**

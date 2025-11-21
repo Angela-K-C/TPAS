@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\TemporaryPass;
+use App\Mail\WelcomeMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class StudentController extends Controller
 {
@@ -96,29 +98,63 @@ class StudentController extends Controller
     {
         $student = Auth::guard('university')->user();
 
-        $request->validate([
+        $validated = $request->validate([
             'pass_type' => 'required|string|max:255',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
             'reason' => 'required|string|max:500',
         ]);
 
+        $existingPass = TemporaryPass::existingNonRejectedFor($student);
+        if ($existingPass) {
+            $rejectedPass = new TemporaryPass([
+                'visitor_name' => $student->name,
+                'email' => $student->email,
+                'national_id' => $student->admission_number,
+                'pass_type' => $validated['pass_type'],
+                'reason' => $validated['reason'],
+                'valid_from' => $validated['date_from'],
+                'valid_until' => $validated['date_to'],
+                'status' => 'rejected',
+            ]);
+
+            $rejectedPass->passable()->associate($student);
+            $rejectedPass->save();
+            $rejectedPass->ensureQrCodeAssets();
+
+            if ($student->email) {
+                Mail::to($student->email)->send(new WelcomeMail($student->name, 'rejected'));
+                $rejectedPass->logEmail($student->email, 'Temporary Pass Application rejected', 'sent');
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'application' => 'You already have an application (#' . $existingPass->id . ') with status "' . $existingPass->status . '". Apply physically at the security office for a temporary pass.',
+                ]);
+        }
+
         $pass = new TemporaryPass([
             'visitor_name' => $student->name,
             'email' => $student->email,
             'national_id' => $student->admission_number,
-            'pass_type' => $request->pass_type,
-            'reason' => $request->reason,
-            'valid_from' => $request->date_from,
-            'valid_until' => $request->date_to,
-            'status' => 'pending',
+            'pass_type' => $validated['pass_type'],
+            'reason' => $validated['reason'],
+            'valid_from' => $validated['date_from'],
+            'valid_until' => $validated['date_to'],
+            'status' => 'approved',
         ]);
 
         $pass->passable()->associate($student);
         $pass->save();
 
+        if ($student->email) {
+            Mail::to($student->email)->send(new WelcomeMail($student->name, 'approved'));
+            $pass->logEmail($student->email, 'Temporary Pass Application approved', 'sent');
+        }
+
         return redirect()->route('dashboard')
-            ->with('success', 'Temporary pass submitted successfully.');
+            ->with('success', 'Temporary pass approved automatically.');
     }
 
     /**
@@ -177,12 +213,17 @@ class StudentController extends Controller
 
         $student = Student::findOrFail($studentId);
 
-        $student->passes()->create([
+        $createdPass = $student->passes()->create([
             'valid_from' => $request->valid_from,
             'valid_until' => $request->valid_until,
-            'status' => 'pending',
+            'status' => 'approved',
         ]);
 
-        return redirect()->back()->with('success', 'Pass application submitted successfully!');
+        if ($student->email) {
+            Mail::to($student->email)->send(new WelcomeMail($student->name, 'approved'));
+            $createdPass->logEmail($student->email, 'Temporary Pass Application approved', 'sent');
+        }
+
+        return redirect()->back()->with('success', 'Pass approved automatically!');
     }
 }
