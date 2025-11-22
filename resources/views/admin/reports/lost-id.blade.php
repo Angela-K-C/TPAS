@@ -15,12 +15,27 @@
     </h2> --}}
 
     <x-card header="Reported IDs Requiring Action">
-        
-        {{-- Search Bar Placeholder --}}
-        <div class="mb-4">
-            <input type="search" placeholder="Search by Student ID, Name, or Location..." 
-                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-iris focus:ring-iris sm:text-sm">
-        </div>
+
+        {{-- Search Bar --}}
+        <form method="GET" action="{{ route('admin.reports.lost.id') }}" class="mb-4">
+            <label for="lost-search" class="sr-only">Search lost ID reports</label>
+            <div class="relative">
+                <input
+                    id="lost-search"
+                    type="search"
+                    name="q"
+                    value="{{ $search ?? '' }}"
+                    placeholder="Search by Student ID, Name, or Location..."
+                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-iris focus:ring-iris sm:text-sm pl-9"
+                >
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M10 4a6 6 0 014.472 9.89l3.819 3.82a1 1 0 01-1.414 1.414l-3.82-3.819A6 6 0 1110 4z"/>
+                    </svg>
+                </span>
+            </div>
+        </form>
 
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">

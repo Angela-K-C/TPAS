@@ -70,6 +70,53 @@
                         {{ $application->reason_label }}
                     </p>
                 </x-card>
+
+                @if($application->auditLogs->isNotEmpty())
+                    <x-card header="Audit Trail">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            When
+                                        </th>
+                                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            Admin
+                                        </th>
+                                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            Action
+                                        </th>
+                                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                            From → To
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach ($application->auditLogs as $log)
+                                        @php
+                                            $beforeStatus = $log->changes['before']['status'] ?? '—';
+                                            $afterStatus = $log->changes['after']['status'] ?? '—';
+                                        @endphp
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-slate-700">
+                                                {{ $log->created_at?->format('M d, Y H:i') ?? '—' }}
+                                            </td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-slate-700">
+                                                {{ $log->admin->name ?? '—' }}
+                                            </td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-slate-700">
+                                                {{ str_replace('_', ' ', ucfirst($log->action)) }}
+                                            </td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-slate-700">
+                                                {{ ucfirst($beforeStatus) }} → {{ ucfirst($afterStatus) }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </x-card>
+                @endif
             </div>
 
             <div class="space-y-6">

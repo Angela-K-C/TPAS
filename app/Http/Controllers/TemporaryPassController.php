@@ -217,7 +217,17 @@ class TemporaryPassController extends Controller
             'valid_until' => 'nullable|date|after_or_equal:valid_from',
         ]);
 
-        $temporaryPass->update($request->only(['status', 'valid_from', 'valid_until']));
+        $admin = Auth::guard('web')->user();
+
+        // Capture original values for audit logging.
+        $before = [
+            'status' => $temporaryPass->status,
+            'valid_from' => optional($temporaryPass->valid_from)->toDateTimeString(),
+            'valid_until' => optional($temporaryPass->valid_until)->toDateTimeString(),
+        ];
+
+        // Apply simple field updates from the request.
+        $temporaryPass->fill($request->only(['status', 'valid_from', 'valid_until']));
 
         // Get details of user who applied
         $user = $temporaryPass->passable;
@@ -225,9 +235,16 @@ class TemporaryPassController extends Controller
         $recipient = $user->email;
         $redirectRoute = route('admin.applications.review', ['application' => $temporaryPass->id]);
 
+        $incomingStatus = $request->input('status');
+
         // If rejected, send email & exit
-        if ($request->input('status') === "rejected") {
-            $status = "rejected";
+        if ($incomingStatus === 'rejected') {
+            $status = 'rejected';
+            $temporaryPass->status = $status;
+
+            $temporaryPass->save();
+            $this->recordAdminAudit($temporaryPass, $admin, 'status_rejected', $before);
+
             // Send email notifying user
             Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
             $this->recordStatusEmail($temporaryPass, $recipient, $status);
@@ -237,15 +254,14 @@ class TemporaryPassController extends Controller
         }
 
         // If approved
-        if ($request->input('status') === 'approved') {
-            $temporaryPass->approved_by = Auth::guard('web')->id();
-            $status = "approved";
-            
+        if ($incomingStatus === 'approved') {
+            $temporaryPass->approved_by = $admin->id;
+            $status = 'approved';
+            $temporaryPass->status = $status;
 
             // Set validity period based on reason
             $now = now();
-            switch($temporaryPass->reason) {
-
+            switch ($temporaryPass->reason) {
                 // Lost ID - 1 week
                 case 'lost_id':
                     $temporaryPass->valid_from = $now;
@@ -278,17 +294,25 @@ class TemporaryPassController extends Controller
             }
 
             // Generate unique QR token
-            $temporaryPass->qr_code_token = (String) Str::uuid();
+            $temporaryPass->qr_code_token = (string) Str::uuid();
+
+            $temporaryPass->save();
+            $this->recordAdminAudit($temporaryPass, $admin, 'status_approved', $before);
 
             // Send email with QR code
             Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
             $this->recordStatusEmail($temporaryPass, $recipient, $status);
+
+            // Redirect to appropriate route
+            return redirect($redirectRoute)->with('success', 'Application updated. Email sent to the applicant.');
         }
 
+        // For other updates (e.g. adjusting validity dates without changing status).
         $temporaryPass->save();
+        $this->recordAdminAudit($temporaryPass, $admin, 'updated', $before);
 
         // Redirect to appropriate route
-        return redirect($redirectRoute)->with('success', 'Application updated. Email sent to the applicant.');
+        return redirect($redirectRoute)->with('success', 'Application updated.');
     }
 
     /**
@@ -389,6 +413,32 @@ class TemporaryPassController extends Controller
     {
         $subject = "Temporary Pass Application {$status}";
         $temporaryPass->logEmail($recipient, $subject, 'sent');
+    }
+
+    /**
+     * Record an admin audit log entry for a pass update.
+     */
+    private function recordAdminAudit(TemporaryPass $temporaryPass, $admin, string $action, array $before): void
+    {
+        if (! $admin) {
+            return;
+        }
+
+        $after = [
+            'status' => $temporaryPass->status,
+            'valid_from' => optional($temporaryPass->valid_from)->toDateTimeString(),
+            'valid_until' => optional($temporaryPass->valid_until)->toDateTimeString(),
+        ];
+
+        $temporaryPass->auditLogs()->create([
+            'admin_id' => $admin->id,
+            'action' => $action,
+            'changes' => [
+                'before' => $before,
+                'after' => $after,
+            ],
+            'created_at' => now(),
+        ]);
     }
 
     /**
