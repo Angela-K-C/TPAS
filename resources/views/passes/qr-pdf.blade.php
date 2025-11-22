@@ -6,6 +6,8 @@
     <style>
         body { font-family: Helvetica, Arial, sans-serif; margin: 24px; color: #0f172a; }
         .card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+        .header { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+        .logo { height: 110px; }
         .heading { font-size: 18px; margin-bottom: 4px; }
         .subheading { font-size: 12px; color: #475569; margin-top: 0; }
         .qr { margin-top: 16px; display: flex; justify-content: center; }
@@ -15,7 +17,10 @@
 </head>
 <body>
     <div class="card">
-        <div class="heading">Temporary Pass QR</div>
+        <div class="header">
+            <img src="{{ public_path('logo.png') }}" alt="TPAS logo" class="logo">
+            <div class="heading">Temporary Pass QR</div>
+        </div>
         <p class="subheading">Present this code for verification. Reference: {{ $reference }}</p>
         <div class="qr">
             <img src="{{ $qrDataUri }}" alt="Temporary pass QR code">

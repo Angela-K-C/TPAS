@@ -9,19 +9,31 @@ use Illuminate\Support\Facades\Auth;
 class AdminController extends Controller
 {
     /**
-     * Show reported lost IDs from students.
+     * Show reported lost IDs from students, with optional search.
      */
-    public function reportsLostId()
+    public function reportsLostId(Request $request)
     {
         $this->ensureAdmin();
 
-        $reports = TemporaryPass::with('passable')
+        $search = trim((string) $request->query('q', ''));
+
+        $query = TemporaryPass::with('passable')
             ->where('reason', 'lost_id')
-            ->orderByDesc('created_at')
-            ->get();
+            ->orderByDesc('created_at');
+
+        if ($search !== '') {
+            $query->where(function ($inner) use ($search) {
+                $inner->where('visitor_name', 'like', '%' . $search . '%')
+                    ->orWhere('national_id', 'like', '%' . $search . '%')
+                    ->orWhere('details', 'like', '%' . $search . '%');
+            });
+        }
+
+        $reports = $query->get();
 
         return view('admin.reports.lost-id', [
             'reports' => $reports,
+            'search' => $search,
         ]);
     }
     /**
@@ -126,7 +138,7 @@ class AdminController extends Controller
     {
         $this->ensureAdmin();
 
-        $application->load(['passable', 'approver']);
+        $application->load(['passable', 'approver', 'auditLogs.admin']);
         $application->ensureQrCodeAssets();
 
         return view('admin.applications.review', [

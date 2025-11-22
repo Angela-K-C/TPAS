@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Models\PassAuditLog;
 
 class TemporaryPass extends Model
 {
@@ -96,6 +97,15 @@ class TemporaryPass extends Model
     public function emailLogs()
     {
         return $this->hasMany(EmailLog::class);
+    }
+
+    /**
+     * Get the audit log entries associated with this pass.
+     */
+    public function auditLogs()
+    {
+        return $this->hasMany(PassAuditLog::class, 'temporary_pass_id')
+            ->latest('created_at');
     }
 
     /**
