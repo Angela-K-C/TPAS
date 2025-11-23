@@ -17,6 +17,10 @@ user="Admin"
         <x-button type="warning" href="{{ route('admin.reports.lost.id') }}" class="flex-1 sm:flex-none">
             Lost ID Reports
         </x-button>
+
+        <x-button type="secondary" href="{{ route('admin.email.logs') }}" class="flex-1 sm:flex-none">
+            Email Logs
+        </x-button>
     </div>
 
     {{-- --- Key Metric Cards (smaller) --- --}}

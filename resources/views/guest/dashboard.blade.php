@@ -47,24 +47,38 @@ user="{{ $guestName }}"
                                 <th class="px-6 py-4 text-left">Purpose</th>
                                 <th class="px-6 py-4 text-left">Duration</th>
                                 <th class="px-6 py-4 text-left">Status</th>
-                                <th class="px-6 py-4"></th>
+                                <th class="px-6 py-4 text-left">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-stroke text-sm">
                             @foreach ($passes as $pass)
                                 <tr>
-                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->id }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $loop->iteration }}</td>
                                     <td class="px-6 py-4 text-deep-slate">VST-{{ $pass->id }}</td>
-                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->national_id  ?? 'N/A'}}</td>
-                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->host_name ?? '—' }}</td> 
-                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->host_department ?? '—' }}</td>
+                                    <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->national_id  ?? '—'}}</td>
                                     <td class="px-6 py-4 font-semibold text-deep-slate">{{ $pass->purpose ?? '—' }}</td>
                                     <td class="px-6 py-4 text-warm-gray">
                                        {{ optional($pass->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($pass->valid_until)->format('M d, Y') ?: 'N/A' }}
-
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-status-badge :status="$pass->status" />
+                                        @php
+                                            $expiresIn = $pass->valid_until
+                                                ? \Carbon\Carbon::parse($pass->valid_until)->diffForHumans(now(), [
+                                                    'short' => true,
+                                                    'parts' => 2,
+                                                    'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                                                ])
+                                                : null;
+                                            $expired = $pass->valid_until && \Carbon\Carbon::parse($pass->valid_until)->isPast();
+                                        @endphp
+                                        <div class="flex flex-col gap-1">
+                                            <x-status-badge :status="$pass->status" />
+                                            @if ($pass->valid_until)
+                                                <span class="text-xs {{ $expired ? 'text-red-600' : 'text-slate-500' }}">
+                                                    {{ $expired ? "Expired {$expiresIn} ago" : "Expires in {$expiresIn}" }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <a href="{{ route('guest.application.show', ['application' => $pass->id]) }}" class="text-iris font-semibold">

@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\WelcomeMail;
 use App\Models\TemporaryPass;
+use App\Support\Observability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class TemporaryPassController extends Controller
 {
@@ -131,8 +134,7 @@ class TemporaryPassController extends Controller
                 $pass->ensureQrCodeAssets();
 
                 if ($pass->email) {
-                    Mail::to($pass->email)->send(new WelcomeMail($pass->visitor_name ?? $student->name, 'rejected', $pass));
-                    $this->recordStatusEmail($pass, $pass->email, 'rejected');
+                    $this->sendStatusEmail($pass, $pass->email, $pass->visitor_name ?? $student->name, 'rejected');
                 }
 
                 return redirect()->back()
@@ -168,8 +170,7 @@ class TemporaryPassController extends Controller
         if ($pass->status === 'approved' && $pass->email) {
             $recipient = $pass->email;
             $username = $pass->visitor_name ?? $applicant->name ?? 'User';
-            Mail::to($recipient)->send(new WelcomeMail($username, 'approved', $pass));
-            $this->recordStatusEmail($pass, $recipient, 'approved');
+            $this->sendStatusEmail($pass, $recipient, $username, 'approved');
         }
 
         return redirect()->route('passes.index')->with('success', $message);
@@ -231,8 +232,8 @@ class TemporaryPassController extends Controller
 
         // Get details of user who applied
         $user = $temporaryPass->passable;
-        $username = $user->name;
-        $recipient = $user->email;
+        $username = $temporaryPass->visitor_name ?? $user->name ?? 'User';
+        $recipient = $temporaryPass->email ?? $user->email;
         $redirectRoute = route('admin.applications.review', ['application' => $temporaryPass->id]);
 
         $incomingStatus = $request->input('status');
@@ -244,10 +245,8 @@ class TemporaryPassController extends Controller
 
             $temporaryPass->save();
             $this->recordAdminAudit($temporaryPass, $admin, 'status_rejected', $before);
-
-            // Send email notifying user
-            Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
-            $this->recordStatusEmail($temporaryPass, $recipient, $status);
+            Observability::recordRejection($temporaryPass, $admin->id);
+            $this->sendStatusEmail($temporaryPass, $recipient, $username, $status);
 
             // Redirect to appropriate route
             return redirect($redirectRoute)->with('success', 'Pass rejected, email sent!');
@@ -298,10 +297,10 @@ class TemporaryPassController extends Controller
 
             $temporaryPass->save();
             $this->recordAdminAudit($temporaryPass, $admin, 'status_approved', $before);
+            Observability::recordApproval($temporaryPass, $admin->id);
 
             // Send email with QR code
-            Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
-            $this->recordStatusEmail($temporaryPass, $recipient, $status);
+            $this->sendStatusEmail($temporaryPass, $recipient, $username, $status);
 
             // Redirect to appropriate route
             return redirect($redirectRoute)->with('success', 'Application updated. Email sent to the applicant.');
@@ -388,9 +387,21 @@ class TemporaryPassController extends Controller
      */
     public function verifyByToken(string $token)
     {
-        $pass = TemporaryPass::with('passable')
-            ->where('qr_code_token', $token)
-            ->firstOrFail();
+        $start = microtime(true);
+        $pass = TemporaryPass::queryByTokenOrReference($token)->first();
+
+        if (! $pass) {
+            $latency = (microtime(true) - $start) * 1000;
+            Observability::recordVerificationAttempt(null, $token, false, $latency);
+
+            return response()->json([
+                'found' => false,
+                'message' => 'Pass not found.',
+            ], 404);
+        }
+
+        $latency = (microtime(true) - $start) * 1000;
+        Observability::recordVerificationAttempt($pass, $token, true, $latency);
 
         return response()->json([
             'found' => true,
@@ -409,10 +420,13 @@ class TemporaryPassController extends Controller
     /**
      * Persist an email log entry after notifying the applicant.
      */
-    private function recordStatusEmail(TemporaryPass $temporaryPass, string $recipient, string $status): void
+    private function recordStatusEmail(TemporaryPass $temporaryPass, string $recipient, string $passStatus, ?string $errorMessage = null): void
     {
-        $subject = "Temporary Pass Application {$status}";
-        $temporaryPass->logEmail($recipient, $subject, 'sent');
+        $subject = "Temporary Pass Application {$passStatus}";
+        $deliveryStatus = $errorMessage ? 'failed' : 'sent';
+
+        $temporaryPass->logEmail($recipient, $subject, $deliveryStatus, $errorMessage);
+        Observability::recordEmailEvent($temporaryPass, $recipient, $deliveryStatus, $errorMessage);
     }
 
     /**
@@ -509,5 +523,25 @@ class TemporaryPassController extends Controller
             'userLabel' => 'User',
             'logoutRoute' => route('logout'),
         ];
+    }
+
+    /**
+     * Send status emails safely and capture observability signals.
+     */
+    private function sendStatusEmail(TemporaryPass $temporaryPass, string $recipient, string $username, string $status): void
+    {
+        try {
+            Mail::to($recipient)->send(new WelcomeMail($username, $status, $temporaryPass));
+            $this->recordStatusEmail($temporaryPass, $recipient, $status);
+        } catch (Throwable $exception) {
+            Log::channel('structured')->error('email.delivery_failed', [
+                'temporary_pass_id' => $temporaryPass->id,
+                'recipient' => $recipient,
+                'status' => $status,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $this->recordStatusEmail($temporaryPass, $recipient, $status, $exception->getMessage());
+        }
     }
 }

@@ -61,7 +61,24 @@ user="{{ auth()->user()->name }}"
 
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-status-badge :status="$pass->status" />
+                                        @php
+                                            $expiresIn = $pass->valid_until
+                                                ? \Carbon\Carbon::parse($pass->valid_until)->diffForHumans(now(), [
+                                                    'short' => true,
+                                                    'parts' => 2,
+                                                    'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                                                ])
+                                                : null;
+                                            $expired = $pass->valid_until && \Carbon\Carbon::parse($pass->valid_until)->isPast();
+                                        @endphp
+                                        <div class="flex flex-col gap-1">
+                                            <x-status-badge :status="$pass->status" />
+                                            @if ($pass->valid_until)
+                                                <span class="text-xs {{ $expired ? 'text-red-600' : 'text-slate-500' }}">
+                                                    {{ $expired ? "Expired {$expiresIn} ago" : "Expires in {$expiresIn}" }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <a href="{{ route('application.show', ['application' => $pass->id]) }}" class="text-iris font-semibold">
@@ -107,7 +124,24 @@ user="{{ auth()->user()->name }}"
                                         {{ optional($lost->valid_from)->format('M d') ?: 'N/A' }} - {{ optional($lost->valid_until)->format('M d, Y') ?: 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-status-badge :status="$lost->status" />
+                                        @php
+                                            $expiresIn = $lost->valid_until
+                                                ? \Carbon\Carbon::parse($lost->valid_until)->diffForHumans(now(), [
+                                                    'short' => true,
+                                                    'parts' => 2,
+                                                    'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                                                ])
+                                                : null;
+                                            $expired = $lost->valid_until && \Carbon\Carbon::parse($lost->valid_until)->isPast();
+                                        @endphp
+                                        <div class="flex flex-col gap-1">
+                                            <x-status-badge :status="$lost->status" />
+                                            @if ($lost->valid_until)
+                                                <span class="text-xs {{ $expired ? 'text-red-600' : 'text-slate-500' }}">
+                                                    {{ $expired ? "Expired {$expiresIn} ago" : "Expires in {$expiresIn}" }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <a href="{{ route('application.show', ['application' => $lost->id]) }}" class="text-iris font-semibold">

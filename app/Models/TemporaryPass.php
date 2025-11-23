@@ -111,8 +111,13 @@ class TemporaryPass extends Model
     /**
      * Convenience helper: return human-readable reason label.
      */
-    public function getReasonLabelAttribute(): string
+      public function getReasonLabelAttribute(): string
     {
+        // If the pass has a free-text purpose, surface that first for better context.
+        if (! empty($this->purpose)) {
+            return $this->purpose;
+        }
+
         $labels = static::reasonLabels();
 
         return $labels[$this->reason] ?? $this->reason;
@@ -152,6 +157,21 @@ class TemporaryPass extends Model
             ->where('status', '!=', 'rejected')
             ->latest()
             ->first();
+    }
+
+    /**
+     * Retrieve a pass by its full QR token or the shortened 8-character reference.
+     */
+    public static function queryByTokenOrReference(string $token)
+    {
+        $token = trim($token);
+        $reference = strtoupper(substr($token, 0, 8));
+
+        return self::with('passable')
+            ->where(function ($query) use ($token, $reference) {
+                $query->where('qr_code_token', $token)
+                    ->orWhereRaw('UPPER(LEFT(qr_code_token, 8)) = ?', [$reference]);
+            });
     }
 
     /**
