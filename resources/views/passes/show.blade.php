@@ -24,7 +24,14 @@
                 <div>
                     <dt class="font-semibold text-slate-600">Status</dt>
                     <dd>
-                        <x-status-badge :status="$pass->status" />
+                        <div class="flex flex-col gap-1">
+                            <x-status-badge :status="$pass->status" />
+                            @if ($pass->valid_until)
+                                <span id="pass-countdown" data-valid-until="{{ $pass->valid_until->toIso8601String() }}" class="text-xs text-slate-500">
+                                    Calculating remaining time…
+                                </span>
+                            @endif
+                        </div>
                     </dd>
                 </div>
                 <div>
@@ -118,3 +125,32 @@
         </div>
     </div>
 </x-dashboard-layout>
+
+<script>
+    const countdownEl = document.getElementById('pass-countdown');
+    if (countdownEl) {
+        const expiresAt = countdownEl.dataset.validUntil;
+        const renderCountdown = () => {
+            if (!expiresAt) return;
+            const expires = new Date(expiresAt).getTime();
+            const now = Date.now();
+            const diffMs = expires - now;
+            const minutes = Math.floor(Math.abs(diffMs) / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            const formatDuration = () => {
+                if (days > 0) return `${days}d ${hours % 24}h`;
+                if (hours > 0) return `${hours}h ${minutes % 60}m`;
+                return `${Math.max(minutes, 0)}m`;
+            };
+
+            countdownEl.textContent = diffMs <= 0
+                ? `Expired ${formatDuration()} ago`
+                : `Expires in ${formatDuration()}`;
+        };
+
+        renderCountdown();
+        setInterval(renderCountdown, 60000);
+    }
+</script>

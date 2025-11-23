@@ -1,4 +1,4 @@
-<x-dashboard-layout title="Visitor Application Detail" :user="auth()->user()->name">
+<x-dashboard-layout title="Visitor Application Detail" :user="auth('guest')->user()?->name ?? 'Guest'">
 
     <div class="max-w-6xl mx-auto space-y-6">
 

@@ -18,9 +18,26 @@
             @endif
         </div>
 
-        <h2 class="text-4xl font-hand text-slate-900 flex items-center gap-4">
+        <h2 class="text-4xl font-hand text-slate-900 flex items-center gap-4 flex-wrap">
             Application #TPAS-{{ $application->id }}
-            <x-status-badge :status="$application->status" class="ml-4 text-base" />
+            @php
+                $expiresIn = $application->valid_until
+                    ? \Carbon\Carbon::parse($application->valid_until)->diffForHumans(now(), [
+                        'short' => true,
+                        'parts' => 2,
+                        'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                    ])
+                    : null;
+                $expired = $application->valid_until && \Carbon\Carbon::parse($application->valid_until)->isPast();
+            @endphp
+            <div class="flex flex-col gap-1">
+                <x-status-badge :status="$application->status" class="ml-0 text-base" />
+                @if ($application->valid_until)
+                    <span class="text-xs {{ $expired ? 'text-red-600' : 'text-slate-500' }}">
+                        {{ $expired ? "Expired {$expiresIn} ago" : "Expires in {$expiresIn}" }}
+                    </span>
+                @endif
+            </div>
         </h2>
 
         {{-- Main Detail Grid --}}

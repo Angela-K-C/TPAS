@@ -60,13 +60,30 @@
                                 <tr>
                                     <td class="px-6 py-4 font-semibold text-deep-slate">VST-{{ str_pad($pass->id, 4, '0', STR_PAD_LEFT) }}</td>
                                     <td class="px-6 py-4 text-slate-600">{{ optional($pass->passable)->name ?? 'Guest' }}</td>
-                                    <td class="px-6 py-4 text-slate-600">{{ $pass->reason_label }}</td>
-                                    <td class="px-6 py-4">
+                                <td class="px-6 py-4 text-slate-600">{{ $pass->reason_label }}</td>
+                                <td class="px-6 py-4">
+                                    @php
+                                        $expiresIn = $pass->valid_until
+                                            ? \Carbon\Carbon::parse($pass->valid_until)->diffForHumans(now(), [
+                                                'short' => true,
+                                                'parts' => 2,
+                                                'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+                                            ])
+                                            : null;
+                                        $expired = $pass->valid_until && \Carbon\Carbon::parse($pass->valid_until)->isPast();
+                                    @endphp
+                                    <div class="flex flex-col gap-1">
                                         <x-status-badge :status="$pass->status" />
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-600">
-                                        {{ optional($pass->valid_from)?->format('M d, Y H:i') ?? '—' }}
-                                    </td>
+                                        @if ($pass->valid_until)
+                                            <span class="text-xs {{ $expired ? 'text-red-600' : 'text-slate-500' }}">
+                                                {{ $expired ? "Expired {$expiresIn} ago" : "Expires in {$expiresIn}" }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">
+                                    {{ optional($pass->valid_from)?->format('M d, Y H:i') ?? '—' }}
+                                </td>
                                     <td class="px-6 py-4 text-slate-600">
                                         {{ optional($pass->valid_until)?->format('M d, Y H:i') ?? '—' }}
                                     </td>

@@ -1,110 +1,108 @@
 @extends('layouts.app', ['title' => 'TPAS Security Desk · Verify Pass', 'showFooter' => false])
 
 @section('content')
-<section class="min-h-screen bg-gradient-to-br from-[#02050d] via-[#070f1f] to-[#151538] py-12 text-white">
-    <div class="max-w-6xl mx-auto px-4 space-y-8">
-        <header class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-                <p class="text-xs uppercase tracking-[0.35em] text-mint/70">Security Portal</p>
-                <h1 class="mt-2 text-3xl font-semibold">Scan or enter a QR token</h1>
-                <p class="mt-2 text-sm text-white/60 max-w-xl">
-                    TPAS syncs every guard station. Paste the token printed under the QR code or launch the live scanner.
-                </p>
+<div class="min-h-screen bg-gray-50">
+    <x-security-navbar :userLabel="($guard?->name ?? 'Security Desk')" :logoutRoute="route('security.logout')" />
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <div class="bg-white rounded-2xl border border-stroke shadow-sm p-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="space-y-1">
+                <p class="text-xs uppercase tracking-[0.35em] text-iris">Security Portal</p>
+                <h1 class="text-2xl font-semibold text-slate-900">Verify a temporary pass</h1>
+                <p class="text-sm text-slate-600">Paste the token printed under the QR code or launch the live scanner. All lookups are audited.</p>
             </div>
-            <form action="{{ route('security.logout') }}" method="POST">
-                @csrf
-                <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:border-mint hover:text-mint focus:ring-2 focus:ring-mint/30">
-                    Log out
-                </button>
-            </form>
-        </header>
+            <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                <span class="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 font-semibold text-green-700">
+                    <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Live link
+                </span>
+                <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
+                    QR + manual lookup
+                </span>
+            </div>
+        </div>
 
         <div class="grid gap-6 lg:grid-cols-5">
-            <section class="lg:col-span-3 rounded-3xl border border-white/10 bg-[#0c1222]/80 backdrop-blur p-6 shadow-[0_30px_90px_rgba(0,0,0,0.65)] space-y-4">
-                <div class="flex items-center justify-between flex-wrap gap-2">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.35em] text-mint/70">Lookup Console</p>
-                        <h2 class="mt-2 text-xl font-semibold">Token search</h2>
+            <section class="lg:col-span-3">
+                <x-card class="shadow-sm border border-stroke bg-white" header="Lookup console">
+                    <div class="space-y-4">
+                        <label for="token" class="text-sm font-medium text-slate-700">QR token</label>
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <input type="text" id="token" name="token" placeholder="Paste or scan token..."
+                                   class="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-900 placeholder:text-slate-400 focus:border-iris focus:ring-2 focus:ring-iris/30 transition shadow-xs" />
+                            <button id="lookupBtn"
+                                    class="rounded-2xl bg-iris px-5 py-4 font-semibold text-white text-base shadow-sm hover:bg-indigo-600 focus:ring-2 focus:ring-iris/30 w-full sm:w-auto">
+                                Lookup
+                            </button>
+                            <button id="scanToggle"
+                                    class="rounded-2xl border border-slate-200 px-5 py-4 font-semibold text-slate-700 text-base hover:border-iris hover:text-iris focus:ring-2 focus:ring-iris/20 w-full sm:w-auto">
+                                Scan QR
+                            </button>
+                        </div>
+                        <div id="scannerContainer" class="hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 space-y-3">
+                            <video id="qrVideo" class="w-full rounded-xl bg-black/70" playsinline></video>
+                            <p class="text-xs text-slate-600">Point the device camera at the QR label. We’ll auto-fill the token.</p>
+                            <button id="stopScan" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 w-full sm:w-auto">
+                                Stop scanning
+                            </button>
+                        </div>
                     </div>
-                    <span class="inline-flex items-center gap-2 rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-white">
-                        <span class="h-2 w-2 rounded-full bg-mint animate-pulse shadow-[0_0_8px_rgba(82,224,196,0.7)]"></span>
-                        Live AMS feed
-                    </span>
-                </div>
-                <label for="token" class="text-sm font-medium text-white/80">QR token</label>
-                <div class="flex flex-col gap-3 sm:flex-row">
-                    <input type="text" id="token" name="token" placeholder="Paste or scan token..."
-                           class="flex-1 rounded-2xl border border-white/15 bg-[#0f172a] px-4 py-3 text-base text-white placeholder:text-white/40 focus:border-white/40 focus:ring-2 focus:ring-white/40 transition" />
-                    <button id="lookupBtn"
-                            class="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 font-semibold text-white shadow-[0_20px_40px_rgba(0,0,0,0.35)] hover:bg-white/20 hover:border-white/40 focus:ring-2 focus:ring-white/30">
-                        Lookup
-                    </button>
-                    <button id="scanToggle"
-                            class="rounded-2xl border border-white/20 px-5 py-3 font-semibold text-white/80 hover:border-white/40 hover:text-white focus:ring-2 focus:ring-white/30">
-                        Scan QR
-                    </button>
-                </div>
-                <div id="scannerContainer" class="hidden rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                    <video id="qrVideo" class="w-full rounded-xl bg-black/60" playsinline></video>
-                    <p class="text-xs text-white/60">Point the device camera at the QR label. We’ll auto-fill the token.</p>
-                    <button id="stopScan" class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20">
-                        Stop scanning
-                    </button>
-                </div>
-                
+                </x-card>
             </section>
 
-            <section id="resultCard" class="lg:col-span-2 hidden rounded-3xl border border-white/10 bg-[#080c1a]/80 backdrop-blur p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
-                <div id="resultHeader" class="flex items-center gap-3">
-                    <div id="statusDot" class="h-3 w-3 rounded-full bg-white/30"></div>
-                    <p id="statusText" class="text-lg font-semibold">Awaiting lookup…</p>
-                </div>
-                <dl class="mt-6 grid gap-4 text-sm text-white/80">
-                    <div class="flex gap-4 items-center">
-                        <div class="relative h-24 w-24 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                            <img id="holderPhoto" class="hidden h-full w-full object-cover" alt="Pass holder photo">
-                            <div id="holderPhotoFallback" class="flex h-full w-full items-center justify-center text-[0.65rem] font-semibold uppercase tracking-wide text-white/50">
-                                No photo
+            <section id="resultCard" class="lg:col-span-2 hidden">
+                <x-card class="shadow-sm border border-stroke bg-white">
+                    <div id="resultHeader" class="flex items-center gap-3">
+                        <div id="statusDot" class="h-3 w-3 rounded-full bg-slate-300"></div>
+                        <p id="statusText" class="text-lg font-semibold text-slate-900">Awaiting lookup…</p>
+                    </div>
+                    <p id="expiryCountdown" class="mt-2 text-sm text-slate-600"></p>
+                    <dl class="mt-6 grid gap-4 text-sm text-slate-700">
+                        <div class="flex gap-4 items-center">
+                            <div class="relative h-24 w-24 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                                <img id="holderPhoto" class="hidden h-full w-full object-cover" alt="Pass holder photo">
+                                <div id="holderPhotoFallback" class="flex h-full w-full items-center justify-center text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">
+                                    No photo
+                                </div>
+                            </div>
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Holder</dt>
+                                <dd class="mt-2 text-base font-semibold text-slate-900" id="holderName">—</dd>
+                                <p class="text-sm text-slate-600" id="holderEmail">—</p>
                             </div>
                         </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Holder</dt>
-                            <dd class="mt-2 text-base font-semibold text-white" id="holderName">—</dd>
-                            <p class="text-sm text-white/60" id="holderEmail">—</p>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Pass reference</dt>
+                                <dd class="mt-2 font-semibold text-slate-900" id="passReference">—</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Pass type</dt>
+                                <dd class="mt-2 font-semibold text-slate-900" id="passType">—</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Status</dt>
+                                <dd class="mt-2 font-semibold text-slate-900" id="statusValue">—</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Reason</dt>
+                                <dd class="mt-2 font-semibold text-slate-900" id="reasonValue">—</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Valid from</dt>
+                                <dd class="mt-2 text-slate-700" id="validFrom">—</dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs uppercase tracking-wide text-slate-500">Valid until</dt>
+                                <dd class="mt-2 text-slate-700" id="validUntil">—</dd>
+                            </div>
                         </div>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Pass reference</dt>
-                            <dd class="mt-2 font-semibold text-white" id="passReference">—</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Pass type</dt>
-                            <dd class="mt-2 font-semibold text-white" id="passType">—</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Status</dt>
-                            <dd class="mt-2 font-semibold text-white" id="statusValue">—</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Reason</dt>
-                            <dd class="mt-2 font-semibold text-white" id="reasonValue">—</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Valid from</dt>
-                            <dd class="mt-2 text-white" id="validFrom">—</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wide text-white/50">Valid until</dt>
-                            <dd class="mt-2 text-white" id="validUntil">—</dd>
-                        </div>
-                    </div>
-                </dl>
+                    </dl>
+                </x-card>
             </section>
         </div>
     </div>
-</section>
+</div>
 
 <script>
     const tokenInput = document.getElementById('token');
@@ -123,6 +121,7 @@
     const passReference = document.getElementById('passReference');
     const validFrom = document.getElementById('validFrom');
     const validUntil = document.getElementById('validUntil');
+    const expiryCountdown = document.getElementById('expiryCountdown');
     const holderPhoto = document.getElementById('holderPhoto');
     const holderPhotoFallback = document.getElementById('holderPhotoFallback');
     const reasonValue = document.getElementById('reasonValue');
@@ -138,6 +137,28 @@
         }).format(new Date(value));
     };
 
+    const buildCountdownText = (expiresAt) => {
+        if (!expiresAt) return '';
+        const expires = new Date(expiresAt).getTime();
+        const now = Date.now();
+        const diffMs = expires - now;
+
+        const minutes = Math.floor(Math.abs(diffMs) / 60000);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        const formatDuration = () => {
+            if (days > 0) return `${days}d ${hours % 24}h`;
+            if (hours > 0) return `${hours}h ${minutes % 60}m`;
+            return `${Math.max(minutes, 0)}m`;
+        };
+
+        if (diffMs <= 0) {
+            return `Expired ${formatDuration()} ago`;
+        }
+
+        return `Expires in ${formatDuration()}`;
+    };
     const extractToken = (raw) => {
         try {
             const parsed = new URL(raw);
@@ -153,6 +174,7 @@
             statusDot.className = 'h-3 w-3 rounded-full bg-mint';
             statusText.textContent = 'Pass verified';
             statusValue.textContent = message;
+            expiryCountdown.textContent = '';
         } else {
             statusDot.className = 'h-3 w-3 rounded-full bg-red-400';
             statusText.textContent = message;
@@ -166,6 +188,7 @@
             reasonValue.textContent = '—';
             holderPhoto.classList.add('hidden');
             holderPhotoFallback.classList.remove('hidden');
+            expiryCountdown.textContent = '';
         }
     };
 
@@ -215,6 +238,7 @@
             reasonValue.textContent = data.reason ?? '—';
             validFrom.textContent = formatDate(data.valid_from);
             validUntil.textContent = formatDate(data.valid_until);
+            expiryCountdown.textContent = buildCountdownText(data.valid_until);
 
             if (data.holder_photo_url) {
                 holderPhoto.src = data.holder_photo_url;

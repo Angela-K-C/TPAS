@@ -56,7 +56,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700 font-medium">
                                 {{ class_basename($app->passable_type) }} ({{ $app->passable_id }})
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->type ?? '—' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-slate-700">
+                                {{ $app->pass_type ?? class_basename($app->passable_type) }}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $app->created_at->diffForHumans() }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">
                                 @if ($app->valid_from && $app->valid_until)

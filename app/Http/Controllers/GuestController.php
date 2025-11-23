@@ -119,12 +119,12 @@ class GuestController extends Controller
         $guest = Auth::guard('guest')->user();
 
         $request->validate([
-            'visitor_name' => 'nullable|string',
-            'national_id' => 'nullable|string',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|string',
-            'host_name' => 'nullable|string',
-            'host_department' => 'nullable|string',
+            'visitor_name' => 'required|string|max:255',
+            'national_id' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:255',
+            'host_name' => 'nullable|string|max:255',
+            'host_department' => 'nullable|string|max:255',
             'purpose' => 'nullable|string',
             'visit_start' => 'required|date',
             'visit_end' => 'required|date|after_or_equal:visit_start',
@@ -142,6 +142,14 @@ class GuestController extends Controller
                     'application' => 'You already have an application (#' . $existingPass->id . ') with status "' . $existingPass->status . '". Wait until it expires before applying again.',
                 ]);
         }
+
+        // Keep guest profile in sync with form details so future emails greet them correctly.
+        $guest->fill([
+            'name' => $request->visitor_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'national_id' => $request->national_id,
+        ])->save();
 
         TemporaryPass::create([
             'passable_type' => 'App\\Models\\Guest',

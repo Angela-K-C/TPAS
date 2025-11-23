@@ -10,6 +10,7 @@
             </p>
             
             <div class="flex justify-center space-x-6 mt-4 md:mt-0 md:order-2">
+                <a href="{{ route('help') }}" class="text-sm text-slate-500 hover:text-slate-700">Help &amp; FAQ</a>
                 <a href="#" class="text-sm text-slate-500 hover:text-slate-700">Privacy Policy</a>
                 <a href="#" class="text-sm text-slate-500 hover:text-slate-700">Terms of Service</a>
             </div>

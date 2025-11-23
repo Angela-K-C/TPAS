@@ -158,7 +158,14 @@ php artisan queue:work
 
 ---
 
-### 8. Useful Artisan Commands
+### 8. Observability
+
+- Structured JSON logs are written to `storage/logs/structured.log` for approvals, rejections, verification attempts, and email delivery errors.
+- Email delivery dashboard is available at `/admin/email-logs` for reviewing pass notification outcomes.
+
+---
+
+### 9. Useful Artisan Commands
 
 | Command | Description |
 |---------|-------------|
@@ -170,7 +177,7 @@ php artisan queue:work
 
 ---
 
-### 9. Contributing Notes
+### 10. Contributing Notes
 
 - Always run tests or key flows (`student` → `passes`, `admin` approvals, `security` lookup) before pushing.
 - When adding migrations/seeders, append instructions in sections 3 and 6 of this README so the rest of the team stays in sync.

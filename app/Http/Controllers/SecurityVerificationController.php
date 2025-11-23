@@ -11,31 +11,42 @@ namespace App\Http\Controllers;
 use App\Models\Guest;
 use App\Models\Student;
 use App\Models\TemporaryPass;
+use App\Support\Observability;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SecurityVerificationController extends Controller
 {
     public function showPortal()
     {
-        return view('security.verify');
+        $guard = Auth::guard('security')->user();
+
+        return view('security.verify', [
+            'guard' => $guard,
+        ]);
     }
 
     public function lookup(Request $request)
     {
+        $start = microtime(true);
         $data = $request->validate([
             'token' => ['required','string','max:255'],
         ]);
 
-        $pass = TemporaryPass::with('passable')
-            ->where('qr_code_token', $data['token'])
-            ->first();
+        $pass = TemporaryPass::queryByTokenOrReference($data['token'])->first();
 
         if (! $pass) {
+            $latency = (microtime(true) - $start) * 1000;
+            Observability::recordVerificationAttempt(null, $data['token'], false, $latency);
+
             return response()->json([
                 'found' => false,
                 'message' => 'Pass not found.',
             ], 404);
         }
+
+        $latency = (microtime(true) - $start) * 1000;
+        Observability::recordVerificationAttempt($pass, $data['token'], true, $latency);
 
         return response()->json([
             'found' => true,
