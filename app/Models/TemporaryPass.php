@@ -174,7 +174,7 @@ class TemporaryPass extends Model
         return self::with('passable')
             ->where(function ($query) use ($token, $reference) {
                 $query->where('qr_code_token', $token)
-                    ->orWhereRaw('UPPER(LEFT(qr_code_token, 8)) = ?', [$reference]);
+                    ->orWhereRaw('UPPER(substr(qr_code_token, 1, 8)) = ?', [$reference]);
             });
     }
 
