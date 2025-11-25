@@ -6,7 +6,7 @@
 <div class="flex items-center justify-center min-h-screen bg-gray-50 px-4">
     <div class="flex flex-col items-center">
         <div class="mb-6">
-            <img src="{{ asset('logo.png') }}" alt="TPAS Logo" class="h-22 object-contain">
+            <img src="{{ asset('logo.png') }}" alt="TPAS Logo" class="h-52 w-auto max-w-lg object-contain mx-auto mb-2">
         </div>
         <div class="w-full max-w-md wire-card p-10 space-y-8 text-center">
             <h2 class="text-4xl font-hand text-slate-900 dark:text-white">
