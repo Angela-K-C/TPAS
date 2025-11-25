@@ -32,6 +32,12 @@
             <div class="lg:col-span-2 space-y-6">
                 <x-card header="Applicant Details">
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-6 text-base">
+                        @if($holder instanceof \App\Models\Guest && $holder->profile_image_path)
+                        <div class="sm:col-span-2 flex items-center gap-4 mb-2">
+                            <img src="{{ asset('storage/' . $holder->profile_image_path) }}" alt="Profile Photo" class="w-24 h-24 rounded-full object-cover border border-slate-200 shadow" />
+                            <span class="text-slate-600 text-sm">Profile Photo</span>
+                        </div>
+                        @endif
                         <div>
                             <dt class="text-slate-500">Applicant Name</dt>
                             <dd class="mt-1 font-semibold text-slate-900">{{ $holder->name ?? '—' }}</dd>

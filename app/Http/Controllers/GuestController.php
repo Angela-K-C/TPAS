@@ -129,6 +129,7 @@ class GuestController extends Controller
             'purpose' => 'nullable|string',
             'visit_start' => 'required|date',
             'visit_end' => 'required|date|after_or_equal:visit_start',
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if (!$guest) {
@@ -145,6 +146,14 @@ class GuestController extends Controller
         }
 
         // Keep guest profile in sync with form details so future emails greet them correctly.
+
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            $photoPath = $photo->store('guest-photos', 'public');
+            $guest->profile_image_path = $photoPath;
+        }
+
         $guest->fill([
             'name' => $request->visitor_name,
             'email' => $request->email,
