@@ -185,6 +185,13 @@ class GuestController extends Controller
     {
         $pass = TemporaryPass::findOrFail($id);
 
+        // Only let the owning guest view their pass details.
+        $guest = Auth::guard('guest')->user();
+        abort_unless($guest && $pass->passable_type === $guest->getMorphClass() && $pass->passable_id === $guest->id, 403);
+
+        // Ensure QR assets exist so the detail view/email/admin all see the same code.
+        $pass->ensureQrCodeAssets();
+
         return view('guest.application-show', [
             'application' => $pass,
         ]);
