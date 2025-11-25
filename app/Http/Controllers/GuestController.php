@@ -129,7 +129,7 @@ class GuestController extends Controller
             'purpose' => 'nullable|string',
             'visit_start' => 'required|date',
             'visit_end' => 'required|date|after_or_equal:visit_start',
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if (!$guest) {
