@@ -6,7 +6,7 @@
 <x-dashboard-layout 
 title="Guest Dashboard" 
 user="{{ $guestName }}"
- :logoutRoute="route('guest.logout')"
+ :logoutRoute="route('logout')"
 >
 
     <div class="space-y-8">
