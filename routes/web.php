@@ -8,6 +8,8 @@ use App\Http\Controllers\SecurityVerificationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TemporaryPassController;
 use App\Models\TemporaryPass;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,17 +57,23 @@ Route::middleware('auth:university')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('guest:guest')->group(function () {
-    Route::get('/login/guest', [GuestController::class, 'showLogin'])->name('guest.login');
-    Route::post('/login/guest', [GuestController::class, 'login'])->name('guest.login.submit');
-});
+Route::prefix('guest')
+    ->name('guest.')
+    ->group(function () {
+        Route::middleware('guest:guest')->group(function () {
+            Route::get('/login', [GuestController::class, 'showLogin'])->name('login');
+            Route::post('/login', [GuestController::class, 'login'])->name('login.submit');
+        });
 
-Route::get('/guest/dashboard', [GuestController::class, 'dashboard'])->name('guest.dashboard');
-Route::post('/guest/logout', [GuestController::class, 'logout'])->name('guest.logout');
-Route::get('/guest/profile', [GuestController::class, 'profile'])->name('guest.profile');
-Route::get('/guest/applications/create', [GuestController::class, 'createApplication'])->name('guest.application.create');
-Route::post('/guest/applications', [GuestController::class, 'storeApplication'])->name('guest.application.store');
-Route::get('/guest/applications/{application}', [GuestController::class, 'showApplication'])->name('guest.application.show');
+        Route::middleware('auth:guest')->group(function () {
+            Route::get('/dashboard', [GuestController::class, 'dashboard'])->name('dashboard');
+            Route::post('/logout', [GuestController::class, 'logout'])->name('logout');
+            Route::get('/profile', [GuestController::class, 'profile'])->name('profile');
+            Route::get('/applications/create', [GuestController::class, 'createApplication'])->name('application.create');
+            Route::post('/applications', [GuestController::class, 'storeApplication'])->name('application.store');
+            Route::get('/applications/{application}', [GuestController::class, 'showApplication'])->name('application.show');
+        });
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -100,7 +108,17 @@ Route::prefix('admin')
 |--------------------------------------------------------------------------
 */
 
-Route::post('/logout', fn () => redirect()->route('login.choice'))->name('logout');
+Route::post('/logout', function (Request $request) {
+    Auth::guard('web')->logout();
+    Auth::guard('university')->logout();
+    Auth::guard('guest')->logout();
+    Auth::guard('security')->logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login.choice');
+})->name('logout');
 
 Route::get('/passes', [TemporaryPassController::class, 'index'])->name('passes.index');
 Route::get('/passes/create', [TemporaryPassController::class, 'create'])->name('passes.create');
