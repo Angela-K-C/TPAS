@@ -12,14 +12,20 @@ class GuardSessionMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $cookie = match (true) {
-            $request->is('admin/*') || $request->routeIs('admin.*') => 'tpas-admin-session',
-            $request->is('security/*') || $request->routeIs('security.*') => 'tpas-security-session',
-            $request->is('guest/*') || $request->routeIs('guest.*') => 'tpas-guest-session',
-            default => 'tpas-university-session',
+        $guardContext = match (true) {
+            $request->is('admin/*') || $request->routeIs('admin.*') => ['tpas-admin-session', '/admin'],
+            $request->is('security/*') || $request->routeIs('security.*') => ['tpas-security-session', '/security'],
+            $request->is('guest/*') || $request->routeIs('guest.*') => ['tpas-guest-session', '/guest'],
+            default => ['tpas-university-session', '/'],
         };
 
-        config(['session.cookie' => $cookie]);
+        [$cookie, $path] = $guardContext;
+
+        // Use guard-scoped cookies and paths so sessions don't overlap across roles.
+        config([
+            'session.cookie' => $cookie,
+            'session.path' => $path,
+        ]);
 
         return $next($request);
     }
