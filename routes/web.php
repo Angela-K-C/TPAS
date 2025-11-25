@@ -100,6 +100,8 @@ Route::prefix('admin')
         Route::get('/passes/expired', [AdminController::class, 'passesExpired'])->name('passes.expired');
         Route::get('/reports/lost-id', [AdminController::class, 'reportsLostId'])->name('reports.lost.id');
         Route::get('/email-logs', [EmailLogController::class, 'index'])->name('email.logs');
+        Route::post('/passes/{temporaryPass}/reset', [AdminController::class, 'resetPass'])->name('passes.reset');
+        Route::post('/passes/reset-by-identifier', [AdminController::class, 'resetPassByIdentifier'])->name('passes.reset.identifier');
     });
 
 /*

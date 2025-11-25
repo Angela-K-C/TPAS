@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TemporaryPass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class AdminController extends Controller
 {
@@ -162,6 +163,63 @@ class AdminController extends Controller
         return view('admin.passes.expired', [
             'expiredPasses' => $expiredPasses,
         ]);
+    }
+
+    /**
+     * Reset a temporary pass so the user can apply again.
+     */
+    public function resetPass(Request $request, TemporaryPass $temporaryPass)
+    {
+        $this->ensureAdmin();
+
+        $expiredAt = Carbon::now()->subMinute();
+        $resetNote = 'Reset by admin on ' . $expiredAt->format('Y-m-d H:i') . ' — pass no longer usable.';
+
+        $temporaryPass->forceFill([
+            'status' => 'rejected',
+            'valid_until' => $expiredAt,
+            'details' => trim(($temporaryPass->details ? $temporaryPass->details . ' | ' : '') . $resetNote),
+        ])->save();
+
+        return back()->with('success', 'Temporary pass reset; the user can reapply.');
+    }
+
+    /**
+     * Reset passes by admission number or email in one action.
+     */
+    public function resetPassByIdentifier(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $data = $request->validate([
+            'identifier' => ['required', 'string'],
+        ]);
+
+        $identifier = trim($data['identifier']);
+        $expiredAt = Carbon::now()->subMinute();
+        $resetNote = 'Reset by admin on ' . $expiredAt->format('Y-m-d H:i') . ' — pass no longer usable.';
+
+        $updated = 0;
+
+        TemporaryPass::where(function ($query) use ($identifier) {
+                $query->where('email', $identifier)
+                    ->orWhere('national_id', $identifier);
+            })
+            ->where('status', '!=', 'rejected')
+            ->each(function (TemporaryPass $pass) use ($expiredAt, $resetNote, &$updated) {
+                $pass->forceFill([
+                    'status' => 'rejected',
+                    'valid_until' => $expiredAt,
+                    'details' => trim(($pass->details ? $pass->details . ' | ' : '') . $resetNote),
+                ])->save();
+                $updated++;
+            });
+
+        if ($updated === 0) {
+            return back()->with('status', 'No matching passes found for that admission number or email.');
+        }
+
+        return back()->with('success', "Reset {$updated} pass(es); the user can reapply now.");
     }
 
     /**
