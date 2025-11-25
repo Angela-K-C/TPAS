@@ -51,14 +51,11 @@ class GuestController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('guest')->logout();
-        Auth::guard('web')->logout();
-        Auth::guard('university')->logout();
-        Auth::guard('security')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login.choice')->with('success', 'Logged out successfully!');
+        return redirect()->route('guest.login')->with('success', 'Logged out successfully!');
     }
 
     public function profile()
