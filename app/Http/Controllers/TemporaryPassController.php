@@ -292,8 +292,10 @@ class TemporaryPassController extends Controller
                     break;
             }
 
-            // Generate unique QR token
-            $temporaryPass->qr_code_token = (string) Str::uuid();
+            // Generate unique QR token only if one doesn't already exist to keep admin/student QR consistent.
+            if (blank($temporaryPass->qr_code_token)) {
+                $temporaryPass->qr_code_token = (string) Str::uuid();
+            }
 
             $temporaryPass->save();
             $this->recordAdminAudit($temporaryPass, $admin, 'status_approved', $before);
