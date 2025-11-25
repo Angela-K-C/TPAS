@@ -176,7 +176,6 @@ class AdminController extends Controller
         $resetNote = 'Reset by admin on ' . $expiredAt->format('Y-m-d H:i') . ' — pass no longer usable.';
 
         $temporaryPass->forceFill([
-            'status' => 'rejected',
             'valid_until' => $expiredAt,
             'details' => trim(($temporaryPass->details ? $temporaryPass->details . ' | ' : '') . $resetNote),
         ])->save();
@@ -205,10 +204,8 @@ class AdminController extends Controller
                 $query->where('email', $identifier)
                     ->orWhere('national_id', $identifier);
             })
-            ->where('status', '!=', 'rejected')
             ->each(function (TemporaryPass $pass) use ($expiredAt, $resetNote, &$updated) {
                 $pass->forceFill([
-                    'status' => 'rejected',
                     'valid_until' => $expiredAt,
                     'details' => trim(($pass->details ? $pass->details . ' | ' : '') . $resetNote),
                 ])->save();

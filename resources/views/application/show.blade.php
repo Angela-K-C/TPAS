@@ -41,7 +41,7 @@
         </h2>
 
         @php
-            $resetNotice = $application->status === 'rejected' && str_contains($application->details ?? '', 'Reset by admin');
+            $resetNotice = str_contains($application->details ?? '', 'Reset by admin');
         @endphp
         @if($resetNotice)
             <div class="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -161,6 +161,9 @@
                             <p class="text-center text-xs font-mono text-slate-500">
                                 Token: {{ strtoupper(substr($application->qr_code_token, 0, 8)) }}
                             </p>
+                            @if($resetNotice)
+                                <p class="text-sm text-amber-700 text-center">This QR code was reset and is not usable.</p>
+                            @endif
                             <a
                                 href="{{ route('passes.qr.image', $application) }}"
                                 target="_blank"
