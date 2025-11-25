@@ -9,7 +9,7 @@
             <div class="space-y-1">
                 <p class="text-xs uppercase tracking-[0.35em] text-iris">Security Portal</p>
                 <h1 class="text-2xl font-semibold text-slate-900">Verify a temporary pass</h1>
-                <p class="text-sm text-slate-600">Paste the token printed under the QR code or launch the live scanner. All lookups are audited.</p>
+                <p class="text-sm text-slate-600">Scan or enter a QR token. Paste the token printed under the QR code or launch the live scanner. All lookups are audited.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600">
                 <span class="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 font-semibold text-green-700">
