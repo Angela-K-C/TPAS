@@ -53,12 +53,10 @@
                     <div>
                         <x-input-field id="pass_type" label="Pass Type" type="select" name="pass_type" helper="Choose the option that best matches your need.">
                             <option value="">Select Pass Type</option>
-                            <option value="ID_LOST">ID Lost Replacement</option>
-                            <option value="EXAM_ACCESS">Exam Access (special seating)</option>
-                            <option value="LAB_ACCESS">Lab Access (after-hours)</option>
-                            <option value="LIBRARY_ACCESS">Library Only</option>
-                            <option value="CLASS_ACCESS">Class/Block Access</option>
-                            <option value="CAMPUS_EVENT">Campus Event (student)</option>
+                            <option value="TEMPORARY">Left ID At Home</option>
+                            <option value="EXAM_ACCESS">Exam Access</option>
+                            <option value="LAB_ACCESS">Lab Access</option>
+                            <option value="CAMPUS_EVENT">Campus Event</option>
                             <option value="OTHER_ACADEMIC">Other Academic Need</option>
                         </x-input-field>
                     </div>
