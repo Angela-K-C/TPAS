@@ -170,6 +170,10 @@ class StudentController extends Controller
             'confirm_report' => 'required',
         ]);
 
+        // Issue a short-lived approved pass so the student can access campus while awaiting replacement.
+        $validFrom = now();
+        $validUntil = now()->addDays(3);
+
         TemporaryPass::create([
             'passable_type' => Student::class,
             'passable_id' => $student->id,
@@ -177,14 +181,15 @@ class StudentController extends Controller
             'email' => $student->email,
             'national_id' => $student->admission_number,
             'reason' => 'lost_id',
-            'valid_from' => $request->lost_date,
-            'valid_until' => $request->lost_date,
-            'status' => 'reported',
-            'details' => $request->location,
+            'pass_type' => 'ID_LOST',
+            'valid_from' => $validFrom,
+            'valid_until' => $validUntil,
+            'status' => 'approved',
+            'details' => $request->location . ' | Lost on: ' . $request->lost_date,
         ]);
 
         return redirect()->route('dashboard')
-            ->with('success', 'Lost ID reported successfully.');
+            ->with('success', 'Lost ID reported. A temporary pass is active for 3 days.');
     }
 
     /**
