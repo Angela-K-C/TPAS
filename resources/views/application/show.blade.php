@@ -40,6 +40,15 @@
             </div>
         </h2>
 
+        @php
+            $resetNotice = $application->status === 'rejected' && str_contains($application->details ?? '', 'Reset by admin');
+        @endphp
+        @if($resetNotice)
+            <div class="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                This pass was reset by an admin and is no longer usable. Please apply again if you need a new pass.
+            </div>
+        @endif
+
         {{-- Main Detail Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 

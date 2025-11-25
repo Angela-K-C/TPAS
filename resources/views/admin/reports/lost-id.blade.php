@@ -10,9 +10,24 @@
         </a>
     </div>
 
-    {{-- <h2 class="text-4xl font-hand text-slate-900 dark:text-white mb-6">
-        Lost ID Report Log
-    </h2> --}}
+    {{-- Quick reset form --}}
+    <x-card class="mb-6" header="Reset passes by admission number or email">
+        <form action="{{ route('admin.passes.reset.identifier') }}" method="POST" class="flex flex-col gap-3 md:flex-row md:items-center">
+            @csrf
+            <label for="identifier" class="text-sm font-medium text-slate-700">Admission number or email</label>
+            <input
+                id="identifier"
+                name="identifier"
+                type="text"
+                required
+                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-iris focus:ring-iris sm:text-sm"
+                placeholder="e.g. 123456 or user@example.com"
+            >
+            <button type="submit" class="inline-flex items-center justify-center rounded-md bg-iris px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600">
+                Reset passes
+            </button>
+        </form>
+    </x-card>
 
     <x-card header="Reported IDs Requiring Action">
 
@@ -45,6 +60,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student ID / Name</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Seen Date</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Reported Location</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                         <!-- Removed Status column -->
                     </tr>
                 </thead>
@@ -57,10 +73,23 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-700">{{ $report->valid_from->format('M d, Y') }}</td>
                             <td class="px-6 py-4 text-slate-700">{{ $report->details }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <a href="{{ route('admin.applications.review', $report) }}" class="text-brand-primary font-semibold text-sm hover:underline">
+                                        Review
+                                    </a>
+                                    <form action="{{ route('admin.passes.reset', $report) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-iris hover:text-indigo-700 font-semibold text-sm">
+                                            Reset temporary pass
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-slate-500">No lost ID reports found.</td>
+                            <td colspan="5" class="px-6 py-4 text-center text-slate-500">No lost ID reports found.</td>
                         </tr>
                     @endforelse
                 </tbody>

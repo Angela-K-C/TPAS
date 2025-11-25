@@ -28,6 +28,15 @@
             <x-status-badge :status="$application->status" class="ml-4 text-base" />
         </h2>
 
+        @php
+            $resetNotice = $application->status === 'rejected' && str_contains($application->details ?? '', 'Reset by admin');
+        @endphp
+        @if($resetNotice)
+            <div class="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                This pass was reset and is no longer usable. Issue a new approval if the user needs access again.
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">
                 <x-card header="Applicant Details">
