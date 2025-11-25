@@ -155,6 +155,10 @@ class TemporaryPass extends Model
         return self::where('passable_type', $passable->getMorphClass())
             ->where('passable_id', $passable->getKey())
             ->where('status', '!=', 'rejected')
+            ->where(function ($query) {
+                $query->whereNull('valid_until')
+                      ->orWhere('valid_until', '>', now());
+            })
             ->latest()
             ->first();
     }
