@@ -15,7 +15,7 @@ return [
 
     'defaults' => [
         'guard' => 'web',
-        'passwords' => 'users',
+        'passwords' => 'admins',
     ],
 
     /*
@@ -41,12 +41,29 @@ return [
             'provider' => 'admins', // We will use 'admins' provider for the web guard
         ],
 
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
+        ],
+
         // --- ADD THIS NEW GUARD FOR UNIVERSITY MEMBERS ---
         'university' => [
             'driver' => 'session',
             'provider' => 'students',
         ],
         // ---------------------------------------------
+
+        // Guard for guests
+        'guest' => [
+            'driver' => 'session',
+            'provider' => 'guests',
+        ],
+
+        // Guard for on-site security staff verifying QR codes
+        'security' => [
+            'driver' => 'session',
+            'provider' => 'security_staff',
+        ],
     ],
 
     /*
@@ -80,10 +97,15 @@ return [
         ],
         // -------------------------------------------------
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'guests' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Guest::class,
+        ],
+
+        'security_staff' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\SecurityStaff::class,
+        ],
     ],
 
     /*

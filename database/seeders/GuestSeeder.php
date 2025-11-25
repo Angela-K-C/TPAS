@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Guest;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +13,14 @@ class GuestSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Guest::factory(15)->create();
+        Guest::updateOrCreate(
+            ['email' => 'alvin.muriuki@strathmore.edu'],
+            [
+                'name' => 'Alvin Murithi',
+                'profile_image_path' => null,
+            ]
+        );
+
+        Guest::factory(14)->create();
     }
 }

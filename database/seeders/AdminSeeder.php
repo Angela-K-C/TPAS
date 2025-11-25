@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Admin;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
@@ -12,6 +13,30 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Admin::factory(15)->create();
+        Admin::updateOrCreate(
+            ['email' => 'alvin.muriuki@strathmore.edu'],
+            [
+                'name' => 'Alvin Murithi',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        Admin::updateOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        Admin::updateOrCreate(
+            ['email' => 'admin@tpas.com'],
+            [
+                'name' => 'TPAS Admin',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        Admin::factory(14)->create();
     }
 }

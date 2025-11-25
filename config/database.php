@@ -68,8 +68,8 @@ return [
             'driver' => 'mysql',
             'host' => env('DB_UNIVERSITY_HOST', '127.0.0.1'),
             'port' => env('DB_UNIVERSITY_PORT', '3306'),
-            'database' => env('DB_UNIVERSITY_DATABASE', 'forge'),
-            'username' => env('DB_UNIVERSITY_USERNAME', 'forge'),
+            'database' => env('DB_UNIVERSITY_DATABASE', 'externalUniversitydb'),
+            'username' => env('DB_UNIVERSITY_USERNAME', 'root'),
             'password' => env('DB_UNIVERSITY_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
@@ -83,7 +83,6 @@ return [
             ]) : [],
         ],
         // ---------------------------------------------------------
-
 
         'pgsql' => [
             'driver' => 'pgsql',
