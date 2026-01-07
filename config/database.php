@@ -64,7 +64,7 @@ return [
         ],
 
         // --- ADD THIS NEW CONNECTION FOR THE EXTERNAL DATABASE ---
-        'university' => [
+        'external_university' => [
             'driver' => 'mysql',
             'host' => env('DB_UNIVERSITY_HOST', '127.0.0.1'),
             'port' => env('DB_UNIVERSITY_PORT', '3306'),
