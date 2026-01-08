@@ -95,6 +95,60 @@ Without these migrations you will see `SQLSTATE[42S22]: Unknown column 'pass_typ
 
 ---
 
+### External University Database Setup (Students Table)
+
+This project uses a separate MySQL database for external university students (for AMS integration).
+
+#### 1. Configure the external database connection
+
+Edit your `.env` file and ensure these variables are set:
+
+```
+DB_UNIVERSITY_CONNECTION=mysql
+DB_UNIVERSITY_HOST=127.0.0.1
+DB_UNIVERSITY_PORT=3306
+DB_UNIVERSITY_DATABASE=externalUniversitydb
+DB_UNIVERSITY_USERNAME=root
+DB_UNIVERSITY_PASSWORD=your_password
+```
+
+
+#### 2. Run the migration for the external students table
+
+> **Important:** To avoid creating internal tables in the external database, always specify the external migrations folder:
+
+```
+php artisan migrate --database=external_university --path=database/migrations/external
+```
+
+#### 3. Seed the external students table
+
+```
+php artisan db:seed --class=ExternalStudentsTableSeeder
+```
+
+This will create and populate the `students` table in the `externalUniversitydb` database.
+
+---
+
+#### Organizing External Migrations
+
+All migrations for the external university database are now located in:
+
+```
+database/migrations/external/
+```
+
+To run only the external migrations, use:
+
+```
+php artisan migrate --database=external_university --path=database/migrations/external
+```
+
+This keeps the migrations for the two databases separate and organized.
+
+---
+
 ### 4. Storage & Assets
 
 ```bash
